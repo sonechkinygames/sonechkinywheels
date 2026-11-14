@@ -382,3 +382,70 @@ a {
     grid-template-columns: minmax(0, 560px);
     justify-content: center;
 }
+
+/* КОЛЕСО СУДЬБЫ */
+
+.wheel-placeholder {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 40px 25px;
+    text-align: center;
+    background: linear-gradient(135deg, #fff0f5, #f1eaff, #fff4ec);
+    border: 1px solid #f3dce5;
+    border-radius: 28px;
+    box-shadow: 0 12px 35px rgba(180, 130, 160, 0.12);
+}
+
+.wheel-placeholder h3 {
+    color: #805b79;
+    font-size: 28px;
+    margin: 15px 0;
+}
+
+.wheel-placeholder > p {
+    color: #806d7d;
+    line-height: 1.7;
+}
+
+.wheel-icon {
+    width: 300px;
+    height: 300px;
+    margin: 30px auto;
+    border-radius: 50%;
+    border: 8px solid white;
+    background: conic-gradient(
+        #f5a9c2 0deg 30deg,
+        #c8b2ed 30deg 60deg,
+        #f8d4a9 60deg 90deg,
+        #e8a9c7 90deg 120deg,
+        #b8c9ee 120deg 150deg,
+        #f3c4d8 150deg 180deg,
+        #c9b4e8 180deg 210deg,
+        #f7d6b5 210deg 240deg,
+        #eda9bd 240deg 270deg,
+        #c1b2e5 270deg 300deg,
+        #f5c6d4 300deg 330deg,
+        #e9c5a5 330deg 360deg
+    );
+    box-shadow: 0 8px 25px rgba(120, 80, 120, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 65px;
+    transition: transform 4s cubic-bezier(0.15, 0.7, 0.1, 1);
+}
+
+#wheel-result {
+    min-height: 35px;
+    margin-top: 25px;
+    font-weight: bold;
+    color: #805b79;
+    font-size: 20px;
+}
+
+@media (max-width: 500px) {
+    .wheel-icon {
+        width: 250px;
+        height: 250px;
+    }
+}
