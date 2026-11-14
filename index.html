@@ -4,87 +4,153 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f8eaf2">
-  <title>Sonechkin's Stories — Колесо судьбы</title>
+  <meta name="theme-color" content="#fff5f7">
+  <title>Sonechkin's Stories — The Sims 4</title>
+  <meta name="description" content="Колесо судьбы и ваши игровые семьи для The Sims 4.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="site-header">
-    <a class="logo" href="#home">Sonechkin's <span>Stories</span></a>
-    <nav aria-label="Главная навигация">
-      <a href="#home">Главная</a>
-      <a href="#wheel">Колесо судьбы</a>
-      <a href="#about">О проекте</a>
-    </nav>
-  </header>
+<header class="header">
+  <a href="#home" class="logo">Sonechkin's <span>Stories</span></a>
+  <nav class="navigation">
+    <a href="#home">Главная</a>
+    <a href="#wheel">Колесо судьбы</a>
+    <a href="#families">Мои семьи</a>
+    <a href="#about">О проекте</a>
+  </nav>
+</header>
 
-  <main>
-    <section class="hero" id="home">
-      <div class="hero-sparkle sparkle-one">✦</div>
-      <div class="hero-sparkle sparkle-two">✧</div>
-      <p class="eyebrow">THE SIMS 4 • STORY GENERATOR</p>
-      <h1>Пусть судьба<br><span>решает за тебя!</span></h1>
-      <p class="hero-copy">Не знаешь, что случится с твоими симами дальше?<br>Доверь это колесу — и приготовься к неожиданностям.</p>
-      <a class="hero-button" href="#wheel">Испытать судьбу <span>↓</span></a>
-    </section>
+<main>
+  <section class="hero" id="home">
+    <div class="hero-content">
+      <span class="eyebrow">✦ YOUR SIMS STORY STARTS HERE ✦</span>
+      <h1>Пусть судьба<br>решает за тебя!</h1>
+      <p>Выбирай семью, крути колесо и позволь случайности изменить ход игры!</p>
+      <a href="#wheel" class="main-button">Крутить колесо ✦</a>
+    </div>
+    <div class="hero-decoration">✿</div>
+  </section>
 
-    <section class="wheel-section section-wrap" id="wheel">
-      <div class="section-heading">
-        <p class="eyebrow">A LITTLE CHAOS, A LOT OF STORIES</p>
-        <h2>Колесо судьбы</h2>
-        <p>Сначала колесо выберет категорию, а затем судьба подкинет событие.</p>
-      </div>
+  <section class="generators" id="wheel">
+    <div class="section-heading">
+      <span>✦ WHEEL OF FATE ✦</span>
+      <h2>Колесо судьбы</h2>
+      <p>Один поворот — и история твоих симов может измениться.</p>
+    </div>
 
-      <div class="wheel-layout">
-        <div class="wheel-side">
-          <div class="wheel-stage">
-            <div class="wheel-pointer" aria-hidden="true"></div>
-            <canvas id="fortune-wheel" width="700" height="700" aria-label="Колесо категорий"></canvas>
-            <div class="wheel-center" aria-hidden="true"><span>✦</span><small>FATE</small></div>
-          </div>
-          <button class="spin-button" id="spin-button" type="button">Крутить колесо <span>✧</span></button>
-          <p class="wheel-hint">Каждый поворот — новая история</p>
-        </div>
+    <div class="wheel-panel">
+      <div class="wheel-controls">
+        <label for="active-family">Игровая семья</label>
+        <select id="active-family"><option value="">Сначала добавь семью</option></select>
 
-        <div class="result-panel" aria-live="polite">
-          <div class="result-kicker">ТВОЙ ЖРЕБИЙ</div>
-          <div id="wheel-result" class="result-content">
-            <div class="result-placeholder-icon">♡</div>
-            <h3>Что приготовила судьба?</h3>
-            <p>Нажми на кнопку и узнай, что ждёт твоего сима.</p>
-          </div>
+        <label for="target-mode">Кого затронет событие?</label>
+        <select id="target-mode">
+          <option value="random">Случайный персонаж семьи</option>
+          <option value="specific">Выбрать персонажа</option>
+          <option value="family">Вся семья</option>
+        </select>
+        <div id="specific-sim-wrap" class="hidden">
+          <label for="specific-sim">Персонаж</label>
+          <select id="specific-sim"></select>
         </div>
       </div>
 
-      <section class="history-box">
-        <div class="history-heading">
-          <div>
-            <p class="eyebrow">YOUR STORY SO FAR</p>
-            <h3>📖 Дневник судьбы</h3>
-          </div>
-          <button class="clear-history" id="clear-history" type="button">Очистить историю</button>
-        </div>
-        <p class="history-subtitle">Все события, которые выпали твоим симам</p>
-        <div id="wheel-history" class="wheel-history">
-          <p class="empty-history">Здесь пока тихо... Время сделать первый поворот судьбы!</p>
-        </div>
-      </section>
-    </section>
+      <div class="wheel-icon" aria-label="Колесо судьбы">🎡</div>
+      <h3>Время испытать судьбу!</h3>
+      <p class="wheel-intro">Пусть случай решит, что произойдёт дальше.</p>
+      <button class="hero-button" id="spin-button" onclick="spinWheel()">Крутить колесо</button>
+      <div id="wheel-result" aria-live="polite"></div>
+    </div>
 
-    <section class="about-section" id="about">
-      <div class="section-wrap about-inner">
-        <p class="eyebrow">ABOUT THE PROJECT</p>
-        <h2>Истории начинаются<br><span>с одного поворота.</span></h2>
-        <p>Sonechkin's Stories — маленький помощник для больших историй в The Sims 4. Пусть случайность вдохновляет на неожиданные повороты, новые знакомства, испытания и целые судьбы.</p>
+    <div class="history-box">
+      <div class="history-heading">
+        <h3>📖 Дневник судьбы</h3>
+        <button class="clear-history" onclick="clearHistory()">Очистить</button>
       </div>
-    </section>
-  </main>
+      <p class="history-subtitle">История выпавших событий сохраняется в этом браузере.</p>
+      <div id="wheel-history" class="wheel-history">
+        <p class="empty-history">Здесь пока тихо... Время сделать первый поворот судьбы!</p>
+      </div>
+    </div>
+  </section>
 
-  <footer>
-    <a class="logo" href="#home">Sonechkin's <span>Stories</span></a>
-    <p>Создано с любовью к The Sims 4 ♡</p>
-  </footer>
+  <section class="families-section" id="families">
+    <div class="section-heading">
+      <span>✦ YOUR SIMS HOUSEHOLDS ✦</span>
+      <h2>Мои семьи</h2>
+      <p>Сохраняй до пяти игровых семей и переключайся между ними, когда захочешь.</p>
+    </div>
 
-  <script src="script.js"></script>
+    <div class="families-layout">
+      <aside class="family-list-card">
+        <div class="family-list-heading">
+          <h3>Сохранённые семьи</h3>
+          <span id="family-count" class="count-pill">0 / 5</span>
+        </div>
+        <div id="family-list" class="family-list"></div>
+        <button id="add-family-button" class="hero-button full-button" onclick="openFamilyForm()">＋ Добавить семью</button>
+        <p class="small-note">Данные сохраняются в памяти браузера на этом устройстве.</p>
+      </aside>
+
+      <div class="family-editor-card">
+        <div id="family-empty" class="empty-state">
+          <div class="empty-icon">🏡</div>
+          <h3>Тут появится твоя семья</h3>
+          <p>Добавь первую семью, чтобы записать её персонажей и родственные связи.</p>
+        </div>
+
+        <div id="family-details" class="hidden">
+          <div class="family-title-row">
+            <div>
+              <span class="eyebrow">ТВОЯ ИГРОВАЯ СЕМЬЯ</span>
+              <h3 id="family-title"></h3>
+              <p id="family-subtitle" class="muted"></p>
+            </div>
+            <div class="inline-actions">
+              <button class="soft-button" onclick="openFamilyForm(true)">Изменить</button>
+              <button class="soft-button danger" onclick="deleteCurrentFamily()">Удалить</button>
+            </div>
+          </div>
+
+          <div class="subsection-heading">
+            <h4>Персонажи</h4>
+            <button class="text-button" onclick="openSimForm()">＋ Добавить персонажа</button>
+          </div>
+          <div id="sim-list" class="sim-list"></div>
+
+          <div class="subsection-heading relationship-heading">
+            <div>
+              <h4>Родственные связи</h4>
+              <p class="muted">Выбери двух персонажей и укажи, кем первый приходится второму.</p>
+            </div>
+            <button class="text-button" onclick="openRelationshipForm()">＋ Добавить связь</button>
+          </div>
+          <div id="relationship-list" class="relationship-list"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="about" id="about">
+    <span>✦ ABOUT THE PROJECT ✦</span>
+    <h2>Твоя история — твои правила</h2>
+    <p>Sonechkin's Stories — помощник для игроков The Sims 4, который добавляет в привычную игру немного неожиданности, вдохновения и весёлого хаоса.</p>
+  </section>
+</main>
+
+<footer class="footer">
+  <p>© 2026 Sonechkiny Games · Made with ♡ for The Sims 4</p>
+</footer>
+
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-backdrop" onclick="closeModal()"></div>
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeModal()" aria-label="Закрыть">×</button>
+    <h3 id="modal-title"></h3>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
