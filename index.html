@@ -2,131 +2,89 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#fff5f7">
-
-    <title>Sonechkin's Stories — The Sims 4</title>
-
-    <meta name="description" content="Колесо судьбы для The Sims 4. Случайные события, неожиданные повороты и новые истории.">
-
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f8eaf2">
+  <title>Sonechkin's Stories — Колесо судьбы</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
-<header class="header">
-    <a href="#" class="logo">Sonechkin's <span>Stories</span></a>
-
-    <nav class="navigation">
-        <a href="#home">Главная</a>
-        <a href="#wheel">Колесо судьбы</a>
-        <a href="#about">О проекте</a>
+  <header class="site-header">
+    <a class="logo" href="#home">Sonechkin's <span>Stories</span></a>
+    <nav aria-label="Главная навигация">
+      <a href="#home">Главная</a>
+      <a href="#wheel">Колесо судьбы</a>
+      <a href="#about">О проекте</a>
     </nav>
-</header>
+  </header>
 
-<main>
-
+  <main>
     <section class="hero" id="home">
-        <div class="hero-content">
+      <div class="hero-sparkle sparkle-one">✦</div>
+      <div class="hero-sparkle sparkle-two">✧</div>
+      <p class="eyebrow">THE SIMS 4 • STORY GENERATOR</p>
+      <h1>Пусть судьба<br><span>решает за тебя!</span></h1>
+      <p class="hero-copy">Не знаешь, что случится с твоими симами дальше?<br>Доверь это колесу — и приготовься к неожиданностям.</p>
+      <a class="hero-button" href="#wheel">Испытать судьбу <span>↓</span></a>
+    </section>
 
-            <span class="eyebrow">✦ YOUR SIMS STORY STARTS HERE ✦</span>
+    <section class="wheel-section section-wrap" id="wheel">
+      <div class="section-heading">
+        <p class="eyebrow">A LITTLE CHAOS, A LOT OF STORIES</p>
+        <h2>Колесо судьбы</h2>
+        <p>Сначала колесо выберет категорию, а затем судьба подкинет событие.</p>
+      </div>
 
-            <h1>Пусть судьба<br>решает за тебя!</h1>
-
-            <p>
-                Никогда не знаешь, что приготовила судьба
-                твоим симам. Крути колесо и позволь
-                случайности изменить ход игры!
-            </p>
-
-            <a href="#wheel" class="main-button">
-                Крутить колесо ✦
-            </a>
-
+      <div class="wheel-layout">
+        <div class="wheel-side">
+          <div class="wheel-stage">
+            <div class="wheel-pointer" aria-hidden="true"></div>
+            <canvas id="fortune-wheel" width="700" height="700" aria-label="Колесо категорий"></canvas>
+            <div class="wheel-center" aria-hidden="true"><span>✦</span><small>FATE</small></div>
+          </div>
+          <button class="spin-button" id="spin-button" type="button">Крутить колесо <span>✧</span></button>
+          <p class="wheel-hint">Каждый поворот — новая история</p>
         </div>
 
-        <div class="hero-decoration">✿</div>
-    </section>
-
-
-    <section class="generators" id="wheel">
-
-        <div class="section-heading">
-
-            <span>✦ WHEEL OF FATE ✦</span>
-
-            <h2>Колесо судьбы</h2>
-
-            <p>
-                Один поворот — и история твоего сима
-                может измениться навсегда.
-            </p>
-
+        <div class="result-panel" aria-live="polite">
+          <div class="result-kicker">ТВОЙ ЖРЕБИЙ</div>
+          <div id="wheel-result" class="result-content">
+            <div class="result-placeholder-icon">♡</div>
+            <h3>Что приготовила судьба?</h3>
+            <p>Нажми на кнопку и узнай, что ждёт твоего сима.</p>
+          </div>
         </div>
+      </div>
 
-       
-<div class="wheel-placeholder">
-    <div class="wheel-icon">🎡</div>
-
-    <h3>Время испытать судьбу!</h3>
-
-    <p>
-        Приготовься к неожиданным событиям,
-        новым возможностям и маленькому хаосу.
-    </p>
-
-    <button class="hero-button" onclick="spinWheel()">
-        Крутить колесо
-    </button>
-
-    <p id="wheel-result"></p>
-</div>
-
-   
-<div class="history-box">
-    <div class="history-heading">
-        <h3>📖 Дневник судьбы</h3>
-        <button class="clear-history" onclick="clearHistory()">Очистить</button>
-    </div>
-
-    <p class="history-subtitle">
-        Все события, которые выпали твоим симам
-    </p>
-
-    <div id="wheel-history" class="wheel-history">
-        <p class="empty-history">
-            Здесь пока тихо... Время сделать первый поворот судьбы!
-        </p>
-    </div>
-</div>
-
+      <section class="history-box">
+        <div class="history-heading">
+          <div>
+            <p class="eyebrow">YOUR STORY SO FAR</p>
+            <h3>📖 Дневник судьбы</h3>
+          </div>
+          <button class="clear-history" id="clear-history" type="button">Очистить историю</button>
+        </div>
+        <p class="history-subtitle">Все события, которые выпали твоим симам</p>
+        <div id="wheel-history" class="wheel-history">
+          <p class="empty-history">Здесь пока тихо... Время сделать первый поворот судьбы!</p>
+        </div>
+      </section>
     </section>
 
-
-    <section class="about" id="about">
-
-        <span>✦ ABOUT THE PROJECT ✦</span>
-
-        <h2>Твоя история — твои правила</h2>
-
-        <p>
-            Sonechkin's Stories — маленький помощник
-            для игроков The Sims 4, который добавляет
-            в привычную игру немного неожиданности,
-            вдохновения и весёлого хаоса.
-        </p>
-
+    <section class="about-section" id="about">
+      <div class="section-wrap about-inner">
+        <p class="eyebrow">ABOUT THE PROJECT</p>
+        <h2>Истории начинаются<br><span>с одного поворота.</span></h2>
+        <p>Sonechkin's Stories — маленький помощник для больших историй в The Sims 4. Пусть случайность вдохновляет на неожиданные повороты, новые знакомства, испытания и целые судьбы.</p>
+      </div>
     </section>
+  </main>
 
-</main>
+  <footer>
+    <a class="logo" href="#home">Sonechkin's <span>Stories</span></a>
+    <p>Создано с любовью к The Sims 4 ♡</p>
+  </footer>
 
-
-<footer class="footer">
-    <p>© 2026 Sonechkiny Games · Made with ♡ for The Sims 4</p>
-</footer>
-
-<script src="script.js"></script>
-
+  <script src="script.js"></script>
 </body>
 </html>
