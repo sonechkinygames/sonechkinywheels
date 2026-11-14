@@ -449,3 +449,59 @@ a {
         height: 250px;
     }
 }
+
+/* КРАСИВЫЕ КНОПКИ */
+
+.hero-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 32px;
+    border: none;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #e9a9c3, #c5a9e8);
+    color: white;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(190, 140, 180, 0.22);
+    transition: all 0.25s ease;
+}
+
+.hero-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 22px rgba(190, 140, 180, 0.32);
+    filter: brightness(1.04);
+}
+
+.hero-button:active {
+    transform: scale(0.97);
+}
+
+.hero-button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+    transform: none;
+}
+
+/* КНОПКА ОЧИСТКИ ИСТОРИИ */
+
+.clear-history {
+    padding: 9px 17px;
+    border: 1px solid #ead5e5;
+    border-radius: 22px;
+    background: #fff7fb;
+    color: #a17b98;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-history:hover {
+    background: #f5e5f1;
+    color: #805b79;
+    border-color: #d9b9d3;
+}
