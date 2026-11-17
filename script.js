@@ -1062,11 +1062,20 @@ function loadState(){
  return defaultState();
 }
 let state=loadState();
-if(!state.sets.some(s=>s.id==="standard")){
- state.sets.unshift({id:"standard",name:"Основной пак",description:"200 событий: быт, семья, карьера и финансы, потрясения.",builtIn:true,events:STANDARD_EVENTS.map((e,i)=>({id:"standard-"+(i+1),...e}))});
+// Всегда восстанавливаем встроенные 200 событий из кода: в старом localStorage
+// мог сохраниться пустой или устаревший объект «Основной пак».
+let standardSet=state.sets.find(s=>s.id==="standard");
+if(!standardSet){
+ standardSet={id:"standard",name:"Основной пак",description:"200 событий: быт, семья, карьера и финансы, потрясения.",builtIn:true,events:[]};
+ state.sets.unshift(standardSet);
 }
-// Основной пак всегда выбран при открытии сайта. Пользовательские наборы можно выбрать вручную,
-// но они не заменяют и не отключают стандартные 200 событий.
+const customStandardEvents=(standardSet.events||[]).filter(e=>e && !String(e.id||"").startsWith("standard-") && e.section!=="Основной пак");
+standardSet.name="Основной пак";
+standardSet.description="200 событий: быт, семья, карьера и финансы, потрясения.";
+standardSet.builtIn=true;
+standardSet.events=[...STANDARD_EVENTS.map((e,i)=>({id:"standard-"+(i+1),...e})),...customStandardEvents];
+state.addons=Array.isArray(state.addons)?state.addons:[];
+// Основной пак всегда выбран при открытии сайта.
 state.activeSetId="standard";
 let currentFamilyId=state.families[0]?.id||null, currentSetId="standard", spinning=false, rotation=0;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
@@ -1102,7 +1111,8 @@ function renderWheelControls(){
  $("wheel-set").innerHTML=state.sets.length ? state.sets.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("") : '<option value="">Пока нет коллекций</option>';
  if(state.sets.some(s=>s.id===currentSetId))$("wheel-set").value=currentSetId;
  $("wheel-set").disabled=!state.sets.length;
- $("spin-button").disabled=!state.sets.some(s=>s.events?.length);
+ const selectedSet=state.sets.find(s=>s.id===$("wheel-set").value)||state.sets.find(s=>s.id==="standard");
+ $("spin-button").disabled=!getWheelEvents(selectedSet).length;
  renderWheelCategories();
 }
 function getWheelEvents(set){
@@ -1175,8 +1185,9 @@ $("wheel-category").addEventListener("change",()=>{});
 $("spin-button").addEventListener("click",spinWheel);
 function spinWheel(){
  if(spinning)return;const f=state.families.find(x=>x.id===$("wheel-family").value);if(!f||!f.sims.length)return notify("Сначала добавь персонажей в выбранную семью.");
- const set=state.sets.find(x=>x.id===$("wheel-set").value)||activeSet();if(!set?.events.length)return notify("В этом наборе пока нет событий.");
- const category=$("wheel-category").value;let candidates=getWheelEvents(set).filter(e=>category==="all"||(e.category||"Без категории")===category);if(!candidates.length)return notify("В выбранной категории нет событий.");
+ const set=state.sets.find(x=>x.id===$("wheel-set").value)||state.sets.find(x=>x.id==="standard")||activeSet();
+ const availableEvents=getWheelEvents(set);if(!availableEvents.length)return notify("В основном паке пока нет событий. Обнови страницу или проверь файлы сайта.");
+ const category=$("wheel-category").value;let candidates=availableEvents.filter(e=>category==="all"||(e.category||"Без категории")===category);if(!candidates.length)return notify("В выбранной категории нет событий.");
  const mode=$("wheel-target").value;let target="Вся семья: "+f.name;if(mode==="specific"){const sim=f.sims.find(s=>s.id===$("wheel-sim").value);target=sim?`${sim.firstName} ${f.surname}`:f.name}else if(mode==="random"){const sim=f.sims[Math.floor(Math.random()*f.sims.length)];target=`${sim.firstName} ${f.surname}`}
  const event=candidates[Math.floor(Math.random()*candidates.length)];spinning=true;$("spin-button").disabled=true;$("wheel-result").innerHTML='<span class="result-label">ТВОЁ СОБЫТИЕ</span><p>Судьба выбирает…</p>';
  rotation+=1440+Math.floor(Math.random()*720);$("wheel-disc").style.transform=`rotate(${rotation}deg)`;
