@@ -54,10 +54,9 @@
 
   <section class="content-section page-section" id="wheel">
     <div class="section-heading">
-      <span class="eyebrow" id="wheel-eyebrow">✦ WHEEL OF FATE ✦</span>
-      <h2 id="wheel-heading">Колесо судьбы</h2>
-      <p id="wheel-subheading">Большие повороты, сюжетные события и приключения, которые меняют жизнь симов.</p>
-      <div class="wheel-mode-switch" role="group" aria-label="Выбор колеса"><button class="wheel-mode-button active" type="button" data-wheel-mode="fate">✦ Колесо судьбы</button><button class="wheel-mode-button" type="button" data-wheel-mode="routine">☼ Колесо повседневности</button></div>
+      <span class="eyebrow">✦ WHEEL OF FATE ✦</span>
+      <h2>Колесо судьбы</h2>
+      <p>Выбери, чья история изменится сегодня.</p>
     </div>
     <div class="wheel-layout">
       <div class="panel wheel-settings">
@@ -73,11 +72,11 @@
         <div id="specific-sim-box" class="hidden">
           <label for="wheel-sim">Персонаж</label><select id="wheel-sim"></select>
         </div>
-        <label for="wheel-set">Набор событий</label>
+        <label for="wheel-set">Твоя коллекция событий</label>
         <select id="wheel-set"></select>
         <label for="wheel-category">Категория</label>
         <select id="wheel-category"><option value="all">Все категории</option></select>
-        <p class="hint">События из выбранного набора и категории попадут в розыгрыш.</p>
+        <p class="hint">Готовые паки сейчас перерабатываются. Пока можно использовать собственные коллекции из раздела «Мои наборы».</p>
       </div>
       <div class="panel wheel-stage">
         <div class="wheel-pointer">▼</div>
@@ -98,11 +97,11 @@
           </div>
           <div class="wheel-disc-center">✦</div>
         </div></div>
-        <div class="wheel-caption" id="wheel-caption">THE FATE IS IN YOUR HANDS</div>
+        <div class="wheel-caption">THE FATE IS IN YOUR HANDS</div>
         <button class="primary-button spin-button" id="spin-button" type="button">Крутить колесо <span>✧</span></button>
         <div class="result-card" id="wheel-result" aria-live="polite">
           <span class="result-label">ТВОЁ СОБЫТИЕ</span>
-          <p>Здесь появится событие…</p>
+          <p>Здесь появится решение судьбы…</p>
         </div>
       </div>
     </div>
@@ -145,7 +144,7 @@
     <div class="section-heading">
       <span class="eyebrow">✦ MAKE IT YOURS ✦</span>
       <h2>Мои наборы</h2>
-      <p>Создавай отдельные коллекции событий, редактируй их и переноси между устройствами.</p>
+      <p>Создавай собственные коллекции событий. Готовые наборы временно убраны — мы их перерабатываем.</p>
     </div>
     <div class="sets-layout">
       <aside class="panel sets-sidebar">
@@ -155,12 +154,12 @@
         <div class="set-tools">
           <button class="small-button" id="import-set">Импортировать</button>
           <button class="small-button" id="export-set">Экспортировать</button>
-          <button class="small-button" id="restore-sets">Вернуть стандартный набор</button>
+          
           <input id="import-file" type="file" accept=".json,.csv,text/csv,application/json" hidden>
         </div>
       </aside>
       <div class="panel set-editor">
-        <div id="set-empty" class="empty-state"><div class="empty-illustration">✧</div><h3>Выбери набор событий</h3><p>Здесь можно будет менять категории и события.</p></div>
+        <div id="set-empty" class="empty-state"><div class="empty-illustration">✧</div><h3>Выбери набор событий</h3><p>Готовые паки временно убраны. Создай собственный набор или вернись позже за обновлёнными коллекциями.</p></div>
         <div id="set-details" class="hidden">
           <div class="set-title-row">
             <div><span class="panel-kicker">EVENT COLLECTION</span><h3 id="set-title"></h3><p id="set-description" class="muted"></p></div>
@@ -194,7 +193,6 @@
   <div class="modal-card"><button class="modal-x" type="button" data-close-modal aria-label="Закрыть">×</button><span class="panel-kicker">A LITTLE EDITING MAGIC</span><h3 id="modal-title"></h3><div id="modal-content"></div></div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="events.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
