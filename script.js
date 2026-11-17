@@ -1136,10 +1136,14 @@ function renderSets(){
  $("set-list").innerHTML=state.sets.map(s=>`<button class="set-choice ${s.id===currentSetId?"active":""}" data-set="${s.id}"><strong>${esc(s.name)}</strong><small>${s.events.length} событий</small></button>`).join("") || '<p class="empty-copy">Пока нет пользовательских наборов.</p>';
  const set=activeSet();$("set-empty").classList.toggle("hidden",!!set);$("set-details").classList.toggle("hidden",!set);if(!set)return;
  $("set-title").textContent=set.name;$("set-description").textContent=set.description||`${set.events.length} событий в наборе`;
- const cats=[...new Set(set.events.map(e=>e.category||"Без категории"))];const filter=$("category-filter"),old=filter.value||"all";
+ const isBuiltIn=set.id==="standard";
+ $("rename-set").classList.toggle("hidden",isBuiltIn);$("delete-set").classList.toggle("hidden",isBuiltIn);
+ const visibleEvents=isBuiltIn?set.events.filter(e=>!String(e.id).startsWith("standard-")):set.events;
+ const cats=[...new Set(visibleEvents.map(e=>e.category||"Без категории"))];const filter=$("category-filter"),old=filter.value||"all";
+ filter.classList.toggle("hidden",isBuiltIn||!visibleEvents.length);
  filter.innerHTML='<option value="all">Все категории</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");if(cats.includes(old))filter.value=old;
- const shown=filter.value==="all"?set.events:set.events.filter(e=>(e.category||"Без категории")===filter.value);
- $("event-list").innerHTML=shown.map(e=>`<div class="event-row"><div><p>${esc(e.text)}</p><small>${esc(e.category||"Без категории")} · ${esc(e.section||"Пользовательские события")}</small></div><div class="event-actions"><button class="mini-action" data-edit-event="${e.id}">Изменить</button><button class="mini-action" data-delete-event="${e.id}">Удалить</button></div></div>`).join("")||'<p class="empty-copy">В этой категории пока нет событий.</p>';
+ const shown=filter.value==="all"?visibleEvents:visibleEvents.filter(e=>(e.category||"Без категории")==filter.value);
+ $("event-list").innerHTML=shown.map(e=>`<div class="event-row"><div><p>${esc(e.text)}</p><small>${esc(e.category||"Без категории")} · ${esc(e.section||"Пользовательские события")}</small></div><div class="event-actions"><button class="mini-action" data-edit-event="${e.id}">Изменить</button><button class="mini-action" data-delete-event="${e.id}">Удалить</button></div></div>`).join("")||(isBuiltIn?'<p class="empty-copy">Добавляй сюда собственные события — стандартные события основного пака скрыты.</p>':'<p class="empty-copy">В этой категории пока нет событий.</p>');
 }
 $("family-list").addEventListener("click",e=>{const b=e.target.closest("[data-family]");if(b){currentFamilyId=b.dataset.family;renderAll()}});
 $("add-family").addEventListener("click",()=>openFamilyForm());
@@ -1232,3 +1236,289 @@ $("addons-list").addEventListener("click",e=>{
 });
 document.querySelectorAll(".main-nav a").forEach(a=>a.addEventListener("click",()=>{document.querySelectorAll(".main-nav a").forEach(x=>x.classList.remove("active"));a.classList.add("active")}));
 renderAll();
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap');
+:root{
+ --bg:#fff9fb;--surface:#fff;--surface-2:#fff1f5;--surface-3:#f6effb;--text:#594653;--muted:#9a8492;
+ --pink:#d98eaa;--pink-deep:#bd718f;--lav:#b8a2d9;--peach:#f2d5c7;--line:#f0e3e9;--shadow:0 14px 42px rgba(123,83,108,.09);
+ --hero:linear-gradient(120deg,#fce7ee 0%,#f0e9fb 58%,#fff0e6 100%);--cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M8 31L25 12' stroke='%237b5878' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M25 3L27 9L33 11L27 13L25 19L23 13L17 11L23 9Z' fill='%23e7a4c1' stroke='%237b5878' stroke-width='1.3'/%3E%3Cpath d='M8 31L5 35L12 33Z' fill='%23c8a7df'/%3E%3C/svg%3E") 5 4,auto;
+}
+[data-theme="dark"]{
+ --bg:#19151f;--surface:#251e2c;--surface-2:#332535;--surface-3:#2b2638;--text:#f2e8f0;--muted:#b7a5b5;
+ --pink:#e6a1bd;--pink-deep:#e6a1bd;--lav:#c4afe7;--peach:#654b51;--line:#403244;--shadow:0 14px 42px rgba(0,0,0,.25);
+ --hero:linear-gradient(120deg,#392534 0%,#30283f 58%,#49343a 100%);
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:105px}body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.6;cursor:var(--cursor)}
+a,button,select,input,textarea,[role=button]{cursor:var(--cursor)}button,input,select,textarea{font:inherit}a{color:inherit;text-decoration:none}button{color:inherit}
+.site-header{position:sticky;top:0;z-index:20;min-height:78px;padding:14px 6.5%;display:flex;align-items:center;justify-content:space-between;gap:24px;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:20px;letter-spacing:-.7px;white-space:nowrap}.brand b{color:var(--pink-deep)}.brand-mark{color:var(--pink);font-size:27px}
+.main-nav{display:flex;align-items:center;gap:clamp(12px,2.2vw,30px)}.main-nav a{font-size:13px;font-weight:700;color:var(--muted);transition:.2s}.main-nav a:hover,.main-nav a.active{color:var(--pink-deep)}
+.theme-toggle{border:1px solid var(--line);background:var(--surface-2);border-radius:30px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;white-space:nowrap}.theme-toggle span:first-child{font-size:17px;color:var(--pink-deep)}
+.page-section{scroll-margin-top:100px}.hero{margin:34px 6.5% 44px;padding:clamp(38px,6vw,78px) clamp(28px,7vw,90px);border-radius:32px;background:var(--hero);display:grid;grid-template-columns:1.1fr .9fr;align-items:center;min-height:460px;overflow:hidden;position:relative}
+.hero-copy{position:relative;z-index:2;max-width:610px}.eyebrow{font-size:10px;letter-spacing:3px;font-weight:800;color:var(--pink-deep)}h1,h2,h3,h4,p{margin-top:0}.hero h1{font-family:'Playfair Display',serif;font-size:clamp(43px,5.6vw,70px);line-height:1.08;letter-spacing:-1.8px;margin:20px 0}.hero h1 em,.about-card h2 em{color:var(--pink-deep);font-weight:600}.hero-copy>p{font-size:16px;color:var(--muted);max-width:470px;margin-bottom:28px}
+.primary-button,.secondary-button{border:0;border-radius:14px;padding:13px 21px;background:linear-gradient(120deg,#d98eaa,#b59bd7);color:#fff;font-weight:800;font-size:13px;box-shadow:0 8px 20px rgba(190,127,164,.2);transition:transform .2s,filter .2s;display:inline-flex;align-items:center;justify-content:center;gap:13px}.primary-button:hover,.secondary-button:hover{transform:translateY(-2px);filter:brightness(1.04)}.primary-button:disabled{opacity:.55;transform:none}.primary-button span{font-size:17px}.hero-footnote{margin-top:28px;color:var(--muted);font-size:11px;letter-spacing:1px}.sparkle{color:var(--pink-deep);font-size:19px;margin-right:7px}
+.hero-art{height:330px;position:relative;display:grid;place-items:center}.orbit{position:absolute;border:1px solid rgba(189,113,143,.25);border-radius:50%;transform:rotate(-22deg)}.orbit-one{width:310px;height:240px}.orbit-two{width:250px;height:320px;transform:rotate(48deg)}.storybook{height:220px;width:165px;border-radius:12px 18px 18px 12px;background:linear-gradient(145deg,#dca1ba,#b9a4d8);box-shadow:16px 18px 35px rgba(107,77,119,.2);transform:rotate(8deg);position:relative;color:white;display:flex;align-items:center;justify-content:center;text-align:center;border:5px solid rgba(255,255,255,.65)}.book-spine{position:absolute;left:13px;top:0;bottom:0;width:2px;background:rgba(255,255,255,.55)}.book-title{font-family:'Playfair Display',serif;font-size:25px;line-height:1.15;letter-spacing:3px}.book-flower{position:absolute;bottom:17px;font-size:25px}.hero-star{position:absolute;color:var(--pink-deep)}.star-a{top:26px;right:20%;font-size:32px}.star-b{bottom:28px;left:15%;font-size:26px}.floating-note{position:absolute;background:var(--surface);color:var(--muted);padding:9px 14px;border-radius:10px;box-shadow:var(--shadow);font-size:10px;letter-spacing:1px}.note-one{top:42px;left:0;transform:rotate(-7deg)}.note-two{bottom:34px;right:0;transform:rotate(5deg)}
+.intro-strip{margin:0 10% 85px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.intro-strip>div{display:grid;grid-template-columns:42px 1fr;column-gap:12px;align-items:center}.strip-icon{grid-row:span 2;width:42px;height:42px;border-radius:14px;background:var(--surface-2);display:grid;place-items:center;color:var(--pink-deep);font-size:22px}.intro-strip b{font-size:13px}.intro-strip small{color:var(--muted);font-size:11px}
+.content-section{padding:25px 8% 90px}.section-heading{text-align:center;margin-bottom:38px}.section-heading h2,.about-card h2{font-family:'Playfair Display',serif;font-size:clamp(32px,4vw,44px);margin:8px 0}.section-heading p{color:var(--muted);font-size:14px}.panel{background:var(--surface);border:1px solid var(--line);border-radius:23px;box-shadow:var(--shadow)}.wheel-layout{display:grid;grid-template-columns:minmax(230px,.72fr) minmax(350px,1.28fr);gap:22px;max-width:1050px;margin:0 auto}.wheel-settings{padding:27px;display:flex;flex-direction:column;align-items:stretch}.panel-kicker{font-size:9px;letter-spacing:2.2px;font-weight:800;color:var(--pink-deep);display:block;margin-bottom:10px}.wheel-settings label,.modal-form label,.set-toolbar label{font-size:11px;font-weight:800;color:var(--muted);margin:13px 0 6px}.wheel-settings select,.set-toolbar select,.modal-form input,.modal-form select,.modal-form textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:var(--bg);color:var(--text);outline:none;font-size:12px}.wheel-settings select:focus,.modal-form input:focus,.modal-form select:focus,.modal-form textarea:focus{border-color:var(--pink)}.hint,.muted{font-size:11px;color:var(--muted)}.wheel-settings .hint{margin:16px 0 0}
+.wheel-stage{min-height:440px;padding:28px;display:flex;align-items:center;flex-direction:column;position:relative;overflow:hidden;background:linear-gradient(160deg,var(--surface),var(--surface-2))}.wheel-pointer{color:var(--pink-deep);font-size:22px;z-index:2;margin-bottom:-8px}.wheel-disc-wrap{width:min(270px,72vw);height:min(270px,72vw);padding:10px;border-radius:50%;background:var(--surface);box-shadow:0 10px 28px rgba(109,76,110,.14)}.wheel-disc{width:100%;height:100%;border-radius:50%;position:relative;background:conic-gradient(#e8abc2 0 30deg,#c8b5e6 30deg 60deg,#f4d4bd 60deg 90deg,#dca9c6 90deg 120deg,#b9c8e7 120deg 150deg,#f1c4d5 150deg 180deg,#c4b2df 180deg 210deg,#f2d8bf 210deg 240deg,#dda5b9 240deg 270deg,#c0b2df 270deg 300deg,#f3c9d6 300deg 330deg,#e8c5a9 330deg 360deg);transition:transform 4s cubic-bezier(.12,.72,.12,1);border:5px solid var(--surface)}.wheel-disc:after{content:"";position:absolute;inset:17%;border:1px dashed rgba(255,255,255,.8);border-radius:50%}
+.wheel-icons{position:absolute;inset:0;z-index:1;pointer-events:none}
+.wheel-icon{position:absolute;width:27px;height:27px;display:grid;place-items:center;filter:drop-shadow(0 2px 2px rgba(94,65,103,.12));}
+.wheel-icon svg{width:100%;height:100%;fill:rgba(255,255,255,.72);stroke:#946d9a;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+.wheel-icon:nth-child(1){left:60.61%;top:10.40%;transform:translate(-50%,-50%)}
+.wheel-icon:nth-child(2){left:78.99%;top:21.01%;transform:translate(-50%,-50%)}
+.wheel-icon:nth-child(3){left:89.60%;top:39.39%;transform:translate(-50%,-50%)}
+.wheel-icon:nth-child(4){left:89.60%;top:60.61%;transform:translate(-50%,-50%)}
+.wheel-icon:nth-child(5){left:78.99%;top:78.99%;transform:translate(-50%,-50%)}
+.wheel-icon:nth-child(6){left:60.61%;top:89.60%;transform:translate(-50%,-50%)}
+.wheel-icon:nth-child(7){left:39.39%;top:89.60%;transform:translate(-50%,-50%)}
+.wheel-icon:nth-child(8){left:21.01%;top:78.99%;transform:translate(-50%,-50%)}
+.wheel-icon:nth-child(9){left:10.40%;top:60.61%;transform:translate(-50%,-50%)}
+.wheel-icon:nth-child(10){left:10.40%;top:39.39%;transform:translate(-50%,-50%)}
+.wheel-icon:nth-child(11){left:21.01%;top:21.01%;transform:translate(-50%,-50%)}
+.wheel-icon:nth-child(12){left:39.39%;top:10.40%;transform:translate(-50%,-50%)}
+.wheel-disc-center{position:absolute;z-index:1;inset:38%;border-radius:50%;background:var(--surface);display:grid;place-items:center;color:var(--pink-deep);font-size:29px;box-shadow:0 3px 12px rgba(80,50,80,.16)}.wheel-caption{font-size:8px;letter-spacing:3px;color:var(--muted);margin:18px 0 12px}.spin-button{min-width:205px}.result-card{margin-top:17px;width:100%;text-align:center;padding:14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);min-height:77px}.result-label{font-size:8px;letter-spacing:2px;color:var(--pink-deep);font-weight:800}.result-card p{font-family:'Playfair Display',serif;font-size:17px;margin:5px 0 0}.result-card .result-meta{font:10px 'DM Sans',sans-serif;color:var(--muted);margin-top:5px}
+.diary-panel{max-width:1050px;margin:22px auto 0;padding:24px 28px}.diary-head,.sidebar-title,.family-heading,.subheading-row,.set-title-row,.set-toolbar{display:flex;align-items:center;justify-content:space-between;gap:15px}.diary-head h3,.sidebar-title h3,.family-heading h3,.set-title-row h3{font-family:'Playfair Display',serif;font-size:23px;margin:0}.text-button{border:0;background:none;color:var(--pink-deep);font-size:11px;font-weight:800;padding:7px}.danger-text{color:#c77c8c}.history-list{display:grid;gap:9px;margin-top:17px}.history-entry{display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;padding:12px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}.history-number{width:30px;height:30px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;color:var(--pink-deep);font-size:11px;font-weight:800}.history-entry strong{font-size:12px}.history-entry small{display:block;color:var(--muted);font-size:10px}.empty-copy{color:var(--muted);font-size:12px;text-align:center;padding:20px}
+.family-workspace,.sets-layout{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:270px minmax(0,1fr);gap:20px;align-items:start}.family-sidebar,.sets-sidebar{padding:22px}.count-badge{font-size:10px;color:var(--pink-deep);background:var(--surface-2);border-radius:30px;padding:5px 9px}.family-list,.set-list{display:grid;gap:8px;margin:17px 0}.family-choice,.set-choice{border:1px solid var(--line);border-radius:12px;padding:12px;text-align:left;background:var(--bg);display:block;width:100%;transition:.2s}.family-choice.active,.set-choice.active{border-color:var(--pink);background:var(--surface-2)}.family-choice strong,.set-choice strong{display:block;font-size:12px}.family-choice small,.set-choice small{font-size:10px;color:var(--muted)}.secondary-button{background:var(--surface-2);color:var(--pink-deep);box-shadow:none;border:1px solid var(--line)}.full-width{width:100%}.family-main,.set-editor{padding:27px;min-height:340px}.empty-state{text-align:center;padding:70px 15px}.empty-illustration{width:65px;height:65px;border-radius:22px;background:var(--surface-2);display:grid;place-items:center;margin:0 auto 17px;color:var(--pink-deep);font-size:34px}.empty-state h3{font-family:'Playfair Display',serif;font-size:23px;margin-bottom:7px}.empty-state p{color:var(--muted);font-size:12px;max-width:330px;margin:0 auto}.family-heading{padding-bottom:20px;border-bottom:1px solid var(--line)}.family-heading h3{font-size:27px}.button-row{display:flex;gap:7px;flex-wrap:wrap}.small-button{border:1px solid var(--line);border-radius:9px;background:var(--bg);padding:8px 11px;font-size:10px;font-weight:700}.danger-outline{color:#c77c8c}.subheading-row{margin:22px 0 12px}.subheading-row h4{margin:0;font-size:14px}.subheading-row .hint{margin:3px 0 0}.sim-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.sim-card,.relation-card{border:1px solid var(--line);background:var(--bg);border-radius:13px;padding:13px;display:flex;justify-content:space-between;align-items:center;gap:10px}.sim-card strong,.relation-card strong{font-size:12px;display:block}.sim-card small,.relation-card small{font-size:10px;color:var(--muted);display:block}.sim-actions{display:flex;gap:4px}.mini-action{border:0;background:var(--surface-2);border-radius:7px;padding:6px 8px;font-size:9px;color:var(--pink-deep)}.relation-list{display:grid;gap:8px}.relation-card{padding:12px}.relation-card .mini-action{flex-shrink:0}.empty-inline{font-size:11px;color:var(--muted);padding:13px}
+.sets-sidebar .set-tools{display:grid;gap:7px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.set-title-row{padding-bottom:18px;border-bottom:1px solid var(--line)}.set-title-row h3{font-size:26px}.set-toolbar{justify-content:flex-start;margin:18px 0;flex-wrap:wrap}.set-toolbar label{margin:0}.set-toolbar select{max-width:260px;width:auto;min-width:180px}.compact-button{padding:10px 14px;margin-left:auto}.event-list{display:grid;gap:8px}.event-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:12px}.event-row p{font-size:11px;margin:0}.event-row small{display:block;color:var(--muted);font-size:9px;margin-top:4px}.event-actions{display:flex;gap:5px}.data-note{max-width:1100px;margin:18px auto 0;color:var(--muted);font-size:10px}.data-note b{color:var(--pink-deep)}
+.about-section{padding:20px 8% 90px}.about-card{max-width:850px;margin:0 auto;text-align:center;border-radius:28px;background:var(--hero);padding:55px 30px}.about-card h2{font-size:39px}.about-card p{max-width:540px;margin:15px auto;color:var(--muted);font-size:13px}.about-signature{font-size:10px;letter-spacing:2px;color:var(--muted);margin-top:23px}.about-signature span{color:var(--pink-deep);font-size:16px}.site-footer{padding:25px 7%;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:10px}.site-footer span:first-child{font-weight:800;color:var(--pink-deep)}
+.hidden{display:none!important}.modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:20px}.modal-backdrop{position:absolute;inset:0;background:rgba(25,15,28,.48);backdrop-filter:blur(5px)}.modal-card{position:relative;z-index:1;width:min(100%,480px);max-height:88vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.2)}.modal-x{position:absolute;right:16px;top:12px;border:0;background:none;font-size:25px;color:var(--muted)}.modal-card h3{font-family:'Playfair Display',serif;font-size:25px;margin:0 0 18px}.modal-form{display:grid;gap:9px}.modal-form label{display:block;margin:4px 0}.modal-form input,.modal-form select,.modal-form textarea{margin-top:5px}.modal-form textarea{min-height:90px;resize:vertical}.modal-form .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.modal-actions{display:flex;gap:9px;margin-top:9px}.modal-actions button{flex:1}.cancel-button{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:12px;font-size:12px;font-weight:700}.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);background:var(--text);color:var(--surface);border-radius:30px;padding:10px 18px;font-size:11px;opacity:0;pointer-events:none;transition:.25s;z-index:70}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:900px){.site-header{padding:13px 4%;flex-wrap:wrap}.main-nav{order:3;width:100%;justify-content:center;flex-wrap:wrap}.hero{margin:22px 4% 35px}.content-section{padding-left:4%;padding-right:4%}.family-workspace,.sets-layout{grid-template-columns:230px minmax(0,1fr)}.wheel-layout{grid-template-columns:230px minmax(0,1fr)}}
+@media(max-width:650px){.site-header{justify-content:center}.brand{font-size:18px}.theme-toggle{position:absolute;right:12px;top:13px;padding:7px 9px}.theme-toggle #theme-label{display:none}.main-nav{gap:13px}.main-nav a{font-size:11px}.hero{grid-template-columns:1fr;margin:15px 4% 30px;padding:35px 25px;min-height:0}.hero-art{height:230px;margin-top:15px}.storybook{height:165px;width:125px}.book-title{font-size:20px}.orbit-one{width:230px;height:180px}.orbit-two{width:180px;height:240px}.intro-strip{margin:0 7% 55px;grid-template-columns:1fr;gap:15px}.content-section{padding:15px 4% 60px}.wheel-layout,.family-workspace,.sets-layout{grid-template-columns:1fr}.wheel-settings{order:2}.wheel-stage{order:1}.family-sidebar,.sets-sidebar{order:2}.family-main,.set-editor{order:1}.sim-grid{grid-template-columns:1fr}.family-heading,.set-title-row{align-items:flex-start;flex-direction:column}.diary-panel{padding:18px}.diary-head{align-items:flex-start}.history-entry{grid-template-columns:30px 1fr}.history-entry>small{grid-column:2}.set-toolbar{align-items:stretch}.set-toolbar select{max-width:none;flex:1}.compact-button{margin-left:0}.event-row{grid-template-columns:1fr}.event-actions{justify-content:flex-end}.site-footer{flex-direction:column;text-align:center}.about-card{padding:40px 22px}.about-card h2{font-size:32px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Дополнения — отдельная область, не смешанная с пользовательскими наборами */
+.addons-panel{max-width:1100px;margin:22px auto 0;padding:24px 27px}
+.addons-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.addons-heading h3{font-family:'Playfair Display',serif;font-size:23px;margin:0 0 4px}
+.addons-heading p{margin:0}
+.addons-list{display:grid;gap:10px;padding-top:14px}
+.addon-card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px;border:1px solid var(--line);border-radius:13px;background:var(--bg)}
+.addon-card strong{display:block;font-size:12px}
+.addon-card small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.addon-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.addon-toggle{border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--pink-deep);padding:8px 11px;font-size:10px;font-weight:800}
+@media(max-width:650px){.addons-panel{padding:20px}.addons-heading{align-items:stretch;flex-direction:column}.addons-heading .secondary-button{width:100%}.addon-card{align-items:flex-start;flex-direction:column}.addon-actions{width:100%}}
+
+/* Компактная боковая панель дополнений в разделе «Мои наборы» */
+.sets-sidebar .addons-panel{width:100%;max-width:none;margin:18px 0 0;padding:16px 14px;}
+.sets-sidebar .addons-heading{display:grid;gap:12px;align-items:stretch;padding-bottom:12px;}
+.sets-sidebar .addons-heading h3{font-size:20px;}
+.sets-sidebar .addons-heading .panel-kicker{font-size:8px;letter-spacing:2px;}
+.sets-sidebar .addons-heading p{font-size:10px;line-height:1.45;}
+.sets-sidebar .addons-heading .secondary-button{width:100%;padding:10px 12px;font-size:11px;}
+.sets-sidebar .addons-list{padding-top:10px;gap:8px;}
+.sets-sidebar .addons-list .empty-copy{padding:12px 4px;font-size:10px;}
+.sets-sidebar .addon-card{display:grid;gap:9px;padding:10px;}
+.sets-sidebar .addon-card strong{font-size:11px;}
+.sets-sidebar .addon-card small{font-size:9px;}
+.sets-sidebar .addon-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.sets-sidebar .addon-actions button{padding:7px 6px;font-size:9px;}
+/* Telegram download link in the add-ons sidebar */
+.telegram-download-button{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:11px;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--pink-deep);font-size:10px;font-weight:700;text-align:center;text-decoration:none;transition:transform .2s,background .2s,border-color .2s}
+.telegram-download-button:hover{transform:translateY(-1px);border-color:var(--pink);background:var(--bg)}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#fff7fa">
+  <meta name="description" content="Sonechkin's Stories — колесо судьбы и инструменты для историй The Sims 4.">
+  <title>Sonechkin's Stories — The Sims 4</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="#home" aria-label="Sonechkin's Stories — главная">
+    <span class="brand-mark">✦</span><span>Sonechkin's <b>Stories</b></span>
+  </a>
+  <nav class="main-nav" aria-label="Главная навигация">
+    <a href="#home" data-nav="home">Главная</a>
+    <a href="#wheel" data-nav="wheel">Колесо судьбы</a>
+    <a href="#families" data-nav="families">Мои семьи</a>
+    <a href="#sets" data-nav="sets">Мои наборы</a>
+    <a href="#about" data-nav="about">О проекте</a>
+  </nav>
+  <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Переключить тему">
+    <span id="theme-icon">☾</span><span id="theme-label">Тёмная тема</span>
+  </button>
+</header>
+
+<main>
+  <section class="hero page-section" id="home">
+    <div class="hero-copy">
+      <span class="eyebrow">✦ YOUR SIMS STORY STARTS HERE ✦</span>
+      <h1>Пусть судьба<br><em>решает за тебя!</em></h1>
+      <p>Создавай игровые семьи, собирай собственные наборы событий и позволяй случайности менять ход истории.</p>
+      <a class="primary-button" href="#wheel">Открыть колесо <span>↗</span></a>
+      <div class="hero-footnote"><span class="sparkle">✧</span> Твоя история — твои правила</div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+      <div class="hero-star star-a">✦</div><div class="hero-star star-b">✧</div>
+      <div class="storybook">
+        <div class="book-spine"></div><div class="book-title">YOUR<br>STORY</div>
+        <div class="book-flower">✿</div>
+      </div>
+      <div class="floating-note note-one">a little bit of magic</div>
+      <div class="floating-note note-two">✧ chapter one</div>
+    </div>
+  </section>
+
+  <section class="intro-strip">
+    <div><span class="strip-icon">✧</span><b>Твои персонажи</b><small>Сохраняй игровые семьи</small></div>
+    <div><span class="strip-icon">✦</span><b>Твои правила</b><small>Создавай наборы событий</small></div>
+    <div><span class="strip-icon">✷</span><b>Немного хаоса</b><small>Доверься колесу судьбы</small></div>
+  </section>
+
+  <section class="content-section page-section" id="wheel">
+    <div class="section-heading">
+      <span class="eyebrow">✦ WHEEL OF FATE ✦</span>
+      <h2>Колесо судьбы</h2>
+      <p>Выбери, чья история изменится сегодня.</p>
+    </div>
+    <div class="wheel-layout">
+      <div class="panel wheel-settings">
+        <div class="panel-kicker">ПЕРЕД НАЧАЛОМ</div>
+        <label for="wheel-family">Игровая семья</label>
+        <select id="wheel-family"></select>
+        <label for="wheel-target">Кого затронет событие?</label>
+        <select id="wheel-target">
+          <option value="random">Случайный персонаж семьи</option>
+          <option value="specific">Выбрать персонажа</option>
+          <option value="family">Вся семья</option>
+        </select>
+        <div id="specific-sim-box" class="hidden">
+          <label for="wheel-sim">Персонаж</label><select id="wheel-sim"></select>
+        </div>
+        <label for="wheel-set">Твоя коллекция событий</label>
+        <select id="wheel-set"></select>
+        <label for="wheel-category">Категория</label>
+        <select id="wheel-category"><option value="all">Все категории</option></select>
+        <p class="hint">Основной пак всегда доступен. Установленные дополнения добавляют события в те же категории, если они включены.</p>
+      </div>
+      <div class="panel wheel-stage">
+        <div class="wheel-pointer">▼</div>
+        <div class="wheel-disc-wrap"><div class="wheel-disc" id="wheel-disc">
+          <div class="wheel-icons" aria-hidden="true">
+            <span class="wheel-icon"><svg viewBox="0 0 32 32"><path d="M5 15.2 16 6l11 9.2v11H5z"/><path d="M12 26v-7h8v7"/></svg></span>
+            <span class="wheel-icon"><svg viewBox="0 0 32 32"><path d="M16 26S5 19 5 11.8A5.8 5.8 0 0 1 16 9a5.8 5.8 0 0 1 11 2.8C27 19 16 26 16 26Z"/></svg></span>
+            <span class="wheel-icon"><svg viewBox="0 0 32 32"><path d="m16 4 3.5 7.4 8.1 1.1-5.9 5.7 1.4 8-7.1-3.8-7.1 3.8 1.4-8-5.9-5.7 8.1-1.1Z"/></svg></span>
+            <span class="wheel-icon"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M19.8 11.5c-.8-1.1-2-1.7-3.8-1.7-2.2 0-3.7 1.1-3.7 2.8 0 4.3 7.6 1.7 7.6 5.8 0 1.7-1.5 2.9-3.9 2.9-1.7 0-3.1-.6-4.1-1.8M16 7.5v17"/></svg></span>
+            <span class="wheel-icon"><svg viewBox="0 0 32 32"><rect x="5" y="9" width="22" height="17" rx="3"/><path d="M11 9V6h10v3M5 15h22M13 18h6"/></svg></span>
+            <span class="wheel-icon"><svg viewBox="0 0 32 32"><path d="M7 25V9l9-4 9 4v16z"/><path d="M12 25v-8h8v8M11 12h2m6 0h2"/></svg></span>
+            <span class="wheel-icon"><svg viewBox="0 0 32 32"><path d="M7 6h18v20H7z"/><path d="M11 11h10M11 15h10M11 19h7"/></svg></span>
+            <span class="wheel-icon"><svg viewBox="0 0 32 32"><path d="m7 25 3-9 10-10 6 6-10 10z"/><path d="m17 9 6 6M7 25l8-2"/></svg></span>
+            <span class="wheel-icon"><svg viewBox="0 0 32 32"><path d="M7 24h18l-2-13H9z"/><path d="M12 11a4 4 0 0 1 8 0M12 17h8"/></svg></span>
+            <span class="wheel-icon"><svg viewBox="0 0 32 32"><path d="M16 5c-5 0-9 3.7-9 8.3 0 3 1.8 5.5 4.5 7V26h9v-5.7c2.7-1.5 4.5-4 4.5-7C25 8.7 21 5 16 5Z"/><path d="M12 29h8M12 14l3 3 5-6"/></svg></span>
+            <span class="wheel-icon"><svg viewBox="0 0 32 32"><path d="M16 27s-9-5.5-9-13a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 7.5-9 13-9 13Z"/><path d="M11 16h3l2-3 2 6 2-3h2"/></svg></span>
+            <span class="wheel-icon"><svg viewBox="0 0 32 32"><path d="M16 5 19 12l8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z"/><path d="M24 5v5m-2.5-2.5h5"/></svg></span>
+          </div>
+          <div class="wheel-disc-center">✦</div>
+        </div></div>
+        <div class="wheel-caption">THE FATE IS IN YOUR HANDS</div>
+        <button class="primary-button spin-button" id="spin-button" type="button">Крутить колесо <span>✧</span></button>
+        <div class="result-card" id="wheel-result" aria-live="polite">
+          <span class="result-label">ТВОЁ СОБЫТИЕ</span>
+          <p>Здесь появится решение судьбы…</p>
+        </div>
+      </div>
+    </div>
+    <div class="panel diary-panel">
+      <div class="diary-head"><div><span class="panel-kicker">YOUR STORY SO FAR</span><h3>Дневник судьбы</h3></div><button class="text-button danger-text" id="clear-history">Очистить дневник</button></div>
+      <div id="wheel-history" class="history-list"><p class="empty-copy">Здесь пока тихо. Самое время сделать первый поворот!</p></div>
+    </div>
+  </section>
+
+  <section class="content-section page-section" id="families">
+    <div class="section-heading">
+      <span class="eyebrow">✦ YOUR SIMS HOUSEHOLDS ✦</span>
+      <h2>Мои семьи</h2>
+      <p>До пяти сохранённых игровых семей — чтобы не путать разные сохранения.</p>
+    </div>
+    <div class="family-workspace">
+      <aside class="panel family-sidebar">
+        <div class="sidebar-title"><h3>Сохранённые семьи</h3><span id="family-count" class="count-badge">0 / 5</span></div>
+        <div id="family-list" class="family-list"></div>
+        <button class="secondary-button full-width" id="add-family">＋ Новая семья</button>
+        <p class="hint">Семьи и персонажи сохраняются в этом браузере.</p>
+      </aside>
+      <div class="panel family-main">
+        <div id="family-empty" class="empty-state"><div class="empty-illustration">⌂</div><h3>Твоя история начинается здесь</h3><p>Добавь семью, а затем внеси её персонажей и родственные связи.</p></div>
+        <div id="family-details" class="hidden">
+          <div class="family-heading">
+            <div><span class="panel-kicker">CURRENT HOUSEHOLD</span><h3 id="family-title"></h3><p id="family-subtitle" class="muted"></p></div>
+            <div class="button-row"><button class="small-button" id="edit-family">Изменить</button><button class="small-button danger-outline" id="delete-family">Удалить</button></div>
+          </div>
+          <div class="subheading-row"><div><h4>Персонажи</h4><p class="hint">Только самое важное: имя, возраст и пол.</p></div><button class="text-button" id="add-sim">＋ Добавить персонажа</button></div>
+          <div id="sim-list" class="sim-grid"></div>
+          <div class="subheading-row relation-subheading"><div><h4>Родственные связи</h4><p class="hint">Укажи связь один раз — обратная появится автоматически.</p></div><button class="text-button" id="add-relation">＋ Добавить связь</button></div>
+          <div id="relationship-list" class="relation-list"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="content-section page-section" id="sets">
+    <div class="section-heading">
+      <span class="eyebrow">✦ MAKE IT YOURS ✦</span>
+      <h2>Мои наборы</h2>
+      <p>Создавай собственные коллекции событий и устанавливай тематические дополнения к основному паку.</p>
+    </div>
+    <div class="sets-layout">
+      <aside class="panel sets-sidebar">
+        <div class="sidebar-title"><h3>Коллекции</h3><span id="set-count" class="count-badge"></span></div>
+        <div id="set-list" class="set-list"></div>
+        <button class="secondary-button full-width" id="add-set">＋ Создать набор</button>
+        <div class="set-tools">
+          <button class="small-button" id="import-set">Импортировать</button>
+          <button class="small-button" id="export-set">Экспортировать</button>
+          <input id="import-file" type="file" accept=".json,.csv,text/csv,application/json" hidden>
+        </div>
+        <div class="panel addons-panel" id="addons-panel">
+          <div class="addons-heading">
+            <div><span class="panel-kicker">EXTRA STORIES</span><h3>Дополнения</h3><p class="muted">Установи тематический JSON-пак.</p><a class="telegram-download-button" href="https://t.me/sonechkinysims" target="_blank" rel="noopener noreferrer">✈ Скачать паки в Telegram ↗</a></div>
+            <button class="secondary-button" id="import-addon" type="button">＋ Установить</button>
+            <input id="addon-import-file" type="file" accept=".json,application/json" hidden>
+          </div>
+          <div id="addons-list" class="addons-list"><p class="empty-copy">Здесь пока ничего нет</p></div>
+        </div>
+      </aside>
+      <div class="panel set-editor">
+        <div id="set-empty" class="empty-state"><div class="empty-illustration">✧</div><h3>Выбери набор событий</h3><p>Создай собственную коллекцию событий или установи тематическое дополнение в панели ниже.</p></div>
+        <div id="set-details" class="hidden">
+          <div class="set-title-row">
+            <div><span class="panel-kicker">EVENT COLLECTION</span><h3 id="set-title"></h3><p id="set-description" class="muted"></p></div>
+            <div class="button-row"><button class="small-button" id="rename-set">Переименовать</button><button class="small-button danger-outline" id="delete-set">Удалить набор</button></div>
+          </div>
+          <div class="set-toolbar">
+            <label for="category-filter">Категория</label><select id="category-filter"></select>
+            <button class="primary-button compact-button" id="add-event">＋ Добавить событие</button>
+          </div>
+          <div id="event-list" class="event-list"></div>
+        </div>
+      </div>
+    </div>
+    <p class="data-note"><b>Важно:</b> изменения и новые наборы хранятся в браузере. Экспортируй JSON-файл, чтобы перенести их на другое устройство или поделиться ими.</p>
+  </section>
+
+  <section class="about-section page-section" id="about">
+    <div class="about-card">
+      <span class="eyebrow">✦ ABOUT SONECHKIN'S STORIES ✦</span>
+      <h2>Твоя история.<br><em>Твои правила.</em></h2>
+      <p>Sonechkin's Stories — небольшой творческий помощник для игроков The Sims 4. Он хранит игровые семьи, помогает создавать собственные наборы событий и добавляет в игру немного неожиданности.</p>
+      <div class="about-signature">made with <span>♡</span> for storytellers</div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer"><span>Sonechkin's Stories</span><span>© 2026 Sonechkiny Games · Made with ♡ for The Sims 4</span></footer>
+
+<div class="modal hidden" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-card"><button class="modal-x" type="button" data-close-modal aria-label="Закрыть">×</button><span class="panel-kicker">A LITTLE EDITING MAGIC</span><h3 id="modal-title"></h3><div id="modal-content"></div></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="script.js"></script>
+</body>
+</html>
