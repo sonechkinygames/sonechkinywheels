@@ -1,3 +1,4 @@
+
 const STORAGE_KEY = "sonechkinsStoriesFinalV2";
 const THEME_KEY = "sonechkinsStoriesTheme";
 const STANDARD_EVENTS = [
@@ -1034,7 +1035,7 @@ function auntWord(s){return s.gender==="female"?"тётя":s.gender==="male"?"д
 function adoptedChildWord(s){return s.gender==="female"?"приёмная дочь":s.gender==="male"?"приёмный сын":"приёмный ребёнок"}
 function adoptiveParentWord(s){return s.gender==="female"?"приёмная мать":s.gender==="male"?"приёмный отец":"приёмный родитель"}
 function reverseLabel(type, from){return REVERSE[type] ? REVERSE[type](from) : "родственник"}
-function defaultState(){return {families:[],sets:[],activeSetId:null,history:[]};}
+function defaultState(){return {families:[],sets:[],addons:[],activeSetId:null,history:[]};}
 function loadState(){
  try{
   const saved=JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -1076,7 +1077,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 function applyTheme(theme){document.documentElement.dataset.theme=theme;$("theme-icon").textContent=theme==="dark"?"☀":"☾";$("theme-label").textContent=theme==="dark"?"Светлая тема":"Тёмная тема";localStorage.setItem(THEME_KEY,theme);document.querySelector('meta[name="theme-color"]').content=theme==="dark"?"#19151f":"#fff7fa"}
 const savedTheme=localStorage.getItem(THEME_KEY);applyTheme(savedTheme==="dark"?"dark":"light");
 $("theme-toggle").addEventListener("click",()=>applyTheme(document.documentElement.dataset.theme==="dark"?"light":"dark"));
-function renderAll(){renderFamilies();renderWheelControls();renderSets();renderHistory()}
+function renderAll(){renderFamilies();renderWheelControls();renderSets();renderAddons();renderHistory()}
 function renderFamilies(){
  $("family-count").textContent=`${state.families.length} / 5`;
  $("family-list").innerHTML=state.families.map(f=>`<button class="family-choice ${f.id===currentFamilyId?"active":""}" data-family="${f.id}"><strong>${esc(f.name)}</strong><small>${esc(f.surname)} · ${f.sims.length} персонажей</small></button>`).join("")||'<p class="empty-copy">Пока нет сохранённых семей.</p>';
@@ -1100,6 +1101,25 @@ function renderWheelControls(){
  $("wheel-set").disabled=!state.sets.length;
  $("spin-button").disabled=!state.sets.some(s=>s.events?.length);
  renderWheelCategories();
+}
+function getWheelEvents(set){
+  if(!set)return [];
+  const events=[...(set.events||[])];
+  if(set.id==="standard"){
+    state.addons.filter(a=>a.enabled!==false).forEach(addon=>{
+      (addon.events||[]).forEach(event=>events.push({...event,sourceAddonId:addon.id,sourceAddonName:addon.name}));
+    });
+  }
+  return events;
+}
+function renderAddons(){
+  const host=$("addons-list");
+  if(!host)return;
+  if(!state.addons.length){host.innerHTML='<p class="empty-copy">Здесь пока ничего нет</p>';return;}
+  host.innerHTML=state.addons.map(addon=>`<div class="addon-card">
+    <div><strong>${esc(addon.name)}</strong><small>${(addon.events||[]).length} событий · ${addon.enabled===false?"Выключено":"Участвует в колесе"}</small>${addon.description?`<small>${esc(addon.description)}</small>`:""}</div>
+    <div class="addon-actions"><button class="addon-toggle" type="button" data-toggle-addon="${esc(addon.id)}">${addon.enabled===false?"Включить":"Выключить"}</button><button class="small-button danger-outline" type="button" data-remove-addon="${esc(addon.id)}">Удалить</button></div>
+  </div>`).join("");
 }
 function renderWheelCategories(){
  const set=state.sets.find(s=>s.id===$("wheel-set").value)||activeSet(),select=$("wheel-category"),prev=select.value||"all";
@@ -1148,12 +1168,12 @@ $("spin-button").addEventListener("click",spinWheel);
 function spinWheel(){
  if(spinning)return;const f=state.families.find(x=>x.id===$("wheel-family").value);if(!f||!f.sims.length)return notify("Сначала добавь персонажей в выбранную семью.");
  const set=state.sets.find(x=>x.id===$("wheel-set").value)||activeSet();if(!set?.events.length)return notify("В этом наборе пока нет событий.");
- const category=$("wheel-category").value;let candidates=set.events.filter(e=>category==="all"||(e.category||"Без категории")===category);if(!candidates.length)return notify("В выбранной категории нет событий.");
+ const category=$("wheel-category").value;let candidates=getWheelEvents(set).filter(e=>category==="all"||(e.category||"Без категории")===category);if(!candidates.length)return notify("В выбранной категории нет событий.");
  const mode=$("wheel-target").value;let target="Вся семья: "+f.name;if(mode==="specific"){const sim=f.sims.find(s=>s.id===$("wheel-sim").value);target=sim?`${sim.firstName} ${f.surname}`:f.name}else if(mode==="random"){const sim=f.sims[Math.floor(Math.random()*f.sims.length)];target=`${sim.firstName} ${f.surname}`}
  const event=candidates[Math.floor(Math.random()*candidates.length)];spinning=true;$("spin-button").disabled=true;$("wheel-result").innerHTML='<span class="result-label">ТВОЁ СОБЫТИЕ</span><p>Судьба выбирает…</p>';
  rotation+=1440+Math.floor(Math.random()*720);$("wheel-disc").style.transform=`rotate(${rotation}deg)`;
- setTimeout(()=>{ $("wheel-result").innerHTML=`<span class="result-label">ТВОЁ СОБЫТИЕ</span><p>${esc(event.text)}</p><div class="result-meta">${esc(target)} · ${esc(event.category||"Без категории")}</div>`;
- state.history.unshift({event:event.text,target,setName:set.name,date:new Date().toLocaleString("ru-RU")});save();renderHistory();spinning=false;$("spin-button").disabled=false;},4000);
+ setTimeout(()=>{ $("wheel-result").innerHTML=`<span class="result-label">ТВОЁ СОБЫТИЕ</span><p>${esc(event.text)}</p><div class="result-meta">${esc(target)} · ${esc(event.category||"Без категории")}${event.sourceAddonName?" · "+esc(event.sourceAddonName):""}</div>`;
+ state.history.unshift({event:event.text,target,setName:event.sourceAddonName?`${set.name} · ${event.sourceAddonName}`:set.name,date:new Date().toLocaleString("ru-RU")});save();renderHistory();spinning=false;$("spin-button").disabled=false;},4000);
 }
 $("clear-history").addEventListener("click",()=>{if(!state.history.length)return;if(confirm("Очистить весь дневник судьбы?")){state.history=[];save();renderHistory()}});
 $("set-list").addEventListener("click",e=>{const b=e.target.closest("[data-set]");if(b){currentSetId=b.dataset.set;state.activeSetId=currentSetId;save();renderSets();renderWheelControls()}});
@@ -1169,5 +1189,46 @@ function downloadFile(name,content,type){const blob=new Blob([content],{type}),u
 $("import-set").addEventListener("click",()=>$("import-file").click());
 $("import-file").addEventListener("change",async e=>{const file=e.target.files[0];if(!file)return;try{const text=await file.text();let imported;if(file.name.toLowerCase().endsWith(".csv")){const lines=text.replace(/^\uFEFF/,"").split(/\r?\n/).filter(Boolean),head=parseCSVLine(lines.shift());const idxText=head.findIndex(x=>/событие|event/i.test(x)),idxCat=head.findIndex(x=>/категория|category|пак/i.test(x));if(idxText<0)throw new Error("В CSV не найдена колонка «Событие».");imported={name:file.name.replace(/\.csv$/i,""),description:"Импортировано из CSV",events:lines.map((line,i)=>{const cols=parseCSVLine(line);return{id:uid(),text:cols[idxText]||"",category:cols[idxCat]||"Импортированные события",section:"Импорт"}}).filter(x=>x.text.trim())}}else{const parsed=JSON.parse(text);const s=parsed.set||parsed;if(!s||!Array.isArray(s.events))throw new Error("В JSON не найден список событий.");imported={name:s.name||file.name.replace(/\.json$/i,""),description:s.description||"Импортированный набор",events:s.events.map(e=>({id:uid(),text:String(e.text||e.event||"").trim(),category:e.category||"Импортированные события",section:e.section||"Импорт"})).filter(e=>e.text)}}if(!imported.events.length)throw new Error("В файле нет событий.");const s={id:uid(),...imported};state.sets.push(s);currentSetId=s.id;state.activeSetId=s.id;save();renderSets();renderWheelControls();notify(`Импортировано событий: ${s.events.length}`)}catch(err){alert("Не удалось импортировать файл: "+err.message)}finally{e.target.value=""}});
 function parseCSVLine(line){const out=[];let cur="",quoted=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&line[i+1]==='"'&&quoted){cur+='"';i++}else if(c==='"')quoted=!quoted;else if(c===","&&!quoted){out.push(cur);cur=""}else cur+=c}out.push(cur);return out}
+$("import-addon").addEventListener("click",()=>$("addon-import-file").click());
+$("addon-import-file").addEventListener("change",async e=>{
+  const file=e.target.files[0];if(!file)return;
+  try{
+    const parsed=JSON.parse(await file.text());
+    if(parsed.format!=="sonechkins-stories-addon"||!parsed.addon||!Array.isArray(parsed.addon.events))
+      throw new Error("Это не файл дополнения Sonechkin's Stories.");
+    const source=parsed.addon;
+    const name=String(source.name||"").trim();
+    if(!name)throw new Error("В файле не указано название дополнения.");
+    const allowedCategories=[...new Set(STANDARD_EVENTS.map(event=>event.category))];
+    const events=source.events.map((event,index)=>{
+      const text=String(event.text||event.event||"").trim();
+      const category=String(event.category||"").trim();
+      if(!text)throw new Error(`У события №${index+1} нет текста.`);
+      if(!allowedCategories.includes(category))throw new Error(`У события «${text.slice(0,45)}…» указана неизвестная категория. Используй: ${allowedCategories.join(", ")}.`);
+      return {id:uid(),text,category,section:name};
+    });
+    if(!events.length)throw new Error("В дополнении нет событий.");
+    const addonId=String(source.id||name.toLowerCase().replace(/[^a-zа-я0-9]+/gi,"-")).trim();
+    if(state.addons.some(a=>a.id===addonId))throw new Error("Это дополнение уже установлено.");
+    state.addons.push({id:addonId,name,description:String(source.description||""),version:parsed.version||1,enabled:true,events});
+    save();renderAddons();renderWheelControls();
+    notify(`Установлено дополнение: ${name} · ${events.length} событий`);
+  }catch(err){alert("Не удалось установить дополнение: "+err.message)}
+  finally{e.target.value=""}
+});
+$("addons-list").addEventListener("click",e=>{
+  const toggle=e.target.closest("[data-toggle-addon]");
+  const remove=e.target.closest("[data-remove-addon]");
+  if(toggle){
+    const addon=state.addons.find(a=>a.id===toggle.dataset.toggleAddon);if(!addon)return;
+    addon.enabled=addon.enabled===false;save();renderAddons();renderWheelControls();
+    notify(addon.enabled?"Дополнение включено":"Дополнение выключено");
+  }
+  if(remove){
+    const addon=state.addons.find(a=>a.id===remove.dataset.removeAddon);if(!addon)return;
+    if(!confirm(`Удалить дополнение «${addon.name}»? Основной пак и пользовательские наборы не изменятся.`))return;
+    state.addons=state.addons.filter(a=>a.id!==addon.id);save();renderAddons();renderWheelControls();notify("Дополнение удалено");
+  }
+});
 document.querySelectorAll(".main-nav a").forEach(a=>a.addEventListener("click",()=>{document.querySelectorAll(".main-nav a").forEach(x=>x.classList.remove("active"));a.classList.add("active")}));
 renderAll();
