@@ -1,6 +1,6 @@
 const STORAGE_KEY = "sonechkinsStoriesFinalV2";
 const THEME_KEY = "sonechkinsStoriesTheme";
-const STANDARD_EVENTS = FATE_EVENTS.map(e=>({...e}));
+const STANDARD_EVENTS = [];
 const AGE_LABELS = {infant:"Младенец",toddler:"Тоддлер",child:"Ребёнок",teen:"Подросток",young:"Молодой",adult:"Взрослый",elder:"Пожилой"};
 const GENDER_LABELS = {female:"Женский",male:"Мужской",unknown:"Не указан"};
 const RELATIONS = {
@@ -33,16 +33,17 @@ function auntWord(s){return s.gender==="female"?"тётя":s.gender==="male"?"д
 function adoptedChildWord(s){return s.gender==="female"?"приёмная дочь":s.gender==="male"?"приёмный сын":"приёмный ребёнок"}
 function adoptiveParentWord(s){return s.gender==="female"?"приёмная мать":s.gender==="male"?"приёмный отец":"приёмный родитель"}
 function reverseLabel(type, from){return REVERSE[type] ? REVERSE[type](from) : "родственник"}
-function defaultState(){return {families:[],sets:[{id:"fate-main",name:"Колесо судьбы — основные события",description:"50 тестовых сюжетных событий. База будет расширяться.",wheelMode:"fate",events:FATE_EVENTS.map(e=>({...e}))},{id:"routine-main",name:"Колесо повседневности",description:"41 лёгкое событие для обычных игровых дней.",wheelMode:"routine",events:ROUTINE_EVENTS.map(e=>({...e}))}],activeSetId:"fate-main",activeWheelSets:{fate:"fate-main",routine:"routine-main"},wheelMode:"fate",history:[]};}
+function defaultState(){return {families:[],sets:[],activeSetId:null,history:[]};}
 function loadState(){
  try{
   const saved=JSON.parse(localStorage.getItem(STORAGE_KEY));
-  if(saved&&Array.isArray(saved.families)&&Array.isArray(saved.sets)){saved.history ||= [];saved.wheelMode ||= "fate";saved.activeWheelSets ||= {};
-   if(!saved.sets.some(s=>s.id==="fate-main")){saved.sets.unshift({id:"fate-main",name:"Колесо судьбы — основные события",description:"50 тестовых сюжетных событий. База будет расширяться.",wheelMode:"fate",events:FATE_EVENTS.map(e=>({...e}))});}
-   if(!saved.sets.some(s=>s.id==="routine-main")){saved.sets.push({id:"routine-main",name:"Колесо повседневности",description:"41 лёгкое событие для обычных игровых дней.",wheelMode:"routine",events:ROUTINE_EVENTS.map(e=>({...e}))});}
-   saved.sets.forEach(s=>{if(!s.wheelMode)s.wheelMode="fate";});
-   saved.activeWheelSets.fate ||= "fate-main";saved.activeWheelSets.routine ||= "routine-main";
-   saved.activeSetId ||= saved.activeWheelSets[saved.wheelMode]||saved.sets[0]?.id;return saved;}
+  if(saved&&Array.isArray(saved.families)&&Array.isArray(saved.sets)){
+   saved.history ||= [];
+   // Удаляем встроенный старый каталог событий; пользовательские коллекции сохраняем.
+   saved.sets = saved.sets.filter(set => set.id !== "standard" && !set.builtIn);
+   saved.activeSetId = saved.sets.some(set => set.id === saved.activeSetId) ? saved.activeSetId : (saved.sets[0]?.id || null);
+   return saved;
+  }
  }catch(e){}
  // Переносим семьи и дневник из предыдущей версии сайта, чтобы обновление не затёрло уже внесённые данные.
  try{
@@ -57,13 +58,10 @@ function loadState(){
  }catch(e){}
  return defaultState();
 }
-let state=loadState(), currentFamilyId=state.families[0]?.id||null, currentSetId=state.activeSetId, spinning=false, rotation=0;
+let state=loadState(), currentFamilyId=state.families[0]?.id||null, currentSetId=state.activeSetId||state.sets[0]?.id||null, spinning=false, rotation=0;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
 function family(){return state.families.find(f=>f.id===currentFamilyId)||null}
 function activeSet(){return state.sets.find(s=>s.id===currentSetId)||state.sets[0]||null}
-function wheelMode(){return state.wheelMode||'fate'}
-function wheelSets(){return state.sets.filter(s=>(s.wheelMode||'fate')===wheelMode())}
-function setWheelMode(mode){if(spinning)return;state.wheelMode=mode;currentSetId=state.activeWheelSets?.[mode]||(mode==='fate'?'fate-main':'routine-main');if(!state.sets.some(s=>s.id===currentSetId&&s.wheelMode===mode))currentSetId=wheelSets()[0]?.id;state.activeWheelSets[mode]=currentSetId;state.activeSetId=currentSetId;save();document.documentElement.dataset.wheelMode=mode;document.querySelectorAll('[data-wheel-mode]').forEach(b=>b.classList.toggle('active',b.dataset.wheelMode===mode));$('wheel-eyebrow').textContent=mode==='fate'?'✦ WHEEL OF FATE ✦':'☼ EVERYDAY MOMENTS ☼';$('wheel-heading').textContent=mode==='fate'?'Колесо судьбы':'Колесо повседневности';$('wheel-subheading').textContent=mode==='fate'?'Большие повороты, сюжетные события и приключения, которые меняют жизнь симов.':'Небольшие события, приятные занятия и спонтанные планы на каждый игровой день.';$('wheel-caption').textContent=mode==='fate'?'THE FATE IS IN YOUR HANDS':'A LITTLE MOMENT FOR YOUR STORY';$('spin-button').innerHTML=mode==='fate'?'Крутить колесо <span>✧</span>':'Выбрать событие <span>☼</span>';$('wheel-result').innerHTML='<span class="result-label">ТВОЁ СОБЫТИЕ</span><p>Здесь появится событие…</p>';renderWheelControls();renderSets();}
 function notify(message){const t=$("toast");t.textContent=message;t.classList.add("show");clearTimeout(notify.timer);notify.timer=setTimeout(()=>t.classList.remove("show"),2400)}
 function showModal(title,content){$("modal-title").textContent=title;$("modal-content").innerHTML=content;$("modal").classList.remove("hidden")}
 function closeModal(){$("modal").classList.add("hidden")}
@@ -91,14 +89,16 @@ function renderWheelControls(){
  $("wheel-sim").innerHTML=(f?.sims||[]).map(s=>`<option value="${s.id}">${esc(s.firstName)} ${esc(f.surname)}</option>`).join("");
  $("wheel-target").disabled=!f?.sims.length;$("wheel-sim").disabled=!f?.sims.length;
  $("specific-sim-box").classList.toggle("hidden",$("wheel-target").value!=="specific");
- const available=wheelSets();if(!available.some(s=>s.id===currentSetId)){currentSetId=available[0]?.id||null;}
- $("wheel-set").innerHTML=available.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
- if(currentSetId)$("wheel-set").value=currentSetId;
+ $("wheel-set").innerHTML=state.sets.length ? state.sets.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("") : '<option value="">Пока нет коллекций</option>';
+ if(state.sets.some(s=>s.id===currentSetId))$("wheel-set").value=currentSetId;
+ $("wheel-set").disabled=!state.sets.length;
+ $("spin-button").disabled=!state.sets.some(s=>s.events?.length);
  renderWheelCategories();
 }
 function renderWheelCategories(){
  const set=state.sets.find(s=>s.id===$("wheel-set").value)||activeSet(),select=$("wheel-category"),prev=select.value||"all";
  const cats=[...new Set((set?.events||[]).map(e=>e.category||"Без категории"))];
+ select.disabled=!set?.events?.length;
  select.innerHTML='<option value="all">Все категории</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
  if(cats.includes(prev))select.value=prev;
 }
@@ -107,7 +107,7 @@ function renderHistory(){
 }
 function renderSets(){
  $("set-count").textContent=state.sets.length+" наб.";
- $("set-list").innerHTML=state.sets.map(s=>`<button class="set-choice ${s.id===currentSetId?"active":""}" data-set="${s.id}"><strong>${esc(s.name)}</strong><small>${s.events.length} событий</small></button>`).join("");
+ $("set-list").innerHTML=state.sets.map(s=>`<button class="set-choice ${s.id===currentSetId?"active":""}" data-set="${s.id}"><strong>${esc(s.name)}</strong><small>${s.events.length} событий</small></button>`).join("") || '<p class="empty-copy">Пока нет пользовательских наборов.</p>';
  const set=activeSet();$("set-empty").classList.toggle("hidden",!!set);$("set-details").classList.toggle("hidden",!set);if(!set)return;
  $("set-title").textContent=set.name;$("set-description").textContent=set.description||`${set.events.length} событий в наборе`;
  const cats=[...new Set(set.events.map(e=>e.category||"Без категории"))];const filter=$("category-filter"),old=filter.value||"all";
@@ -124,11 +124,11 @@ $("add-relation").addEventListener("click",openRelationForm);
 $("sim-list").addEventListener("click",e=>{const edit=e.target.closest("[data-edit-sim]"),del=e.target.closest("[data-delete-sim]");if(edit)openSimForm(family().sims.find(s=>s.id===edit.dataset.editSim));if(del)deleteSim(del.dataset.deleteSim)});
 $("relationship-list").addEventListener("click",e=>{const b=e.target.closest("[data-delete-rel]");if(b){family().relationships=family().relationships.filter(r=>r.id!==b.dataset.deleteRel);save();renderFamilies()}});
 function openFamilyForm(existing=null){if(!existing&&state.families.length>=5)return notify("Можно сохранить не больше пяти семей.");showModal(existing?"Изменить семью":"Новая семья",`<form class="modal-form" id="family-form"><label>Название семьи<input name="name" required maxlength="50" placeholder="Например, Харрингтоны" value="${esc(existing?.name||"")}"></label><label>Фамилия персонажей<input name="surname" required maxlength="40" placeholder="Например, Харрингтон" value="${esc(existing?.surname||"")}"></label><div class="modal-actions"><button class="primary-button">Сохранить</button><button class="cancel-button" type="button" data-close-modal>Отмена</button></div></form>`);
- $("family-form").onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target),name=fd.get("name").trim(),surname=fd.get("surname").trim();if(existing){existing.name=name;existing.surname=surname}else{const f={id:uid(),name,surname,sims:[],relationships:[]};state.families.push(f);currentFamilyId=f.id}save();closeModal();document.documentElement.dataset.wheelMode=wheelMode();document.querySelectorAll("[data-wheel-mode]").forEach(b=>b.classList.toggle("active",b.dataset.wheelMode===wheelMode()));setWheelMode(wheelMode());renderAll();notify("Семья сохранена")};
+ $("family-form").onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target),name=fd.get("name").trim(),surname=fd.get("surname").trim();if(existing){existing.name=name;existing.surname=surname}else{const f={id:uid(),name,surname,sims:[],relationships:[]};state.families.push(f);currentFamilyId=f.id}save();closeModal();renderAll();notify("Семья сохранена")};
 }
 function deleteFamily(){const f=family();if(!f||!confirm(`Удалить семью «${f.name}» вместе с персонажами?`))return;state.families=state.families.filter(x=>x.id!==f.id);currentFamilyId=state.families[0]?.id||null;save();renderAll()}
 function openSimForm(existing=null){const f=family();if(!f)return;showModal(existing?"Изменить персонажа":"Новый персонаж",`<form class="modal-form" id="sim-form"><label>Имя персонажа<input name="firstName" required maxlength="30" value="${esc(existing?.firstName||"")}" placeholder="Например, Эмили"></label><div class="field-row"><label>Возраст<select name="age">${Object.entries(AGE_LABELS).map(([k,v])=>`<option value="${k}" ${existing?.age===k?"selected":""}>${v}</option>`).join("")}</select></label><label>Пол<select name="gender"><option value="unknown">Не указывать</option><option value="female" ${existing?.gender==="female"?"selected":""}>Женский</option><option value="male" ${existing?.gender==="male"?"selected":""}>Мужской</option></select></label></div><p class="hint">Фамилия автоматически берётся из настроек семьи: ${esc(f.surname)}.</p><div class="modal-actions"><button class="primary-button">Сохранить</button><button class="cancel-button" type="button" data-close-modal>Отмена</button></div></form>`);
- $("sim-form").onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target),sim={firstName:fd.get("firstName").trim(),age:fd.get("age"),gender:fd.get("gender")};if(existing)Object.assign(existing,sim);else f.sims.push({id:uid(),...sim});save();closeModal();document.documentElement.dataset.wheelMode=wheelMode();document.querySelectorAll("[data-wheel-mode]").forEach(b=>b.classList.toggle("active",b.dataset.wheelMode===wheelMode()));setWheelMode(wheelMode());renderAll();notify("Персонаж сохранён")};
+ $("sim-form").onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target),sim={firstName:fd.get("firstName").trim(),age:fd.get("age"),gender:fd.get("gender")};if(existing)Object.assign(existing,sim);else f.sims.push({id:uid(),...sim});save();closeModal();renderAll();notify("Персонаж сохранён")};
 }
 function deleteSim(id){const f=family(),s=f.sims.find(x=>x.id===id);if(!s||!confirm(`Удалить ${s.firstName}? Его родственные связи тоже будут удалены.`))return;f.sims=f.sims.filter(x=>x.id!==id);f.relationships=f.relationships.filter(r=>r.from!==id&&r.to!==id);save();renderAll()}
 function openRelationForm(){const f=family();if(!f||f.sims.length<2)return notify("Добавь хотя бы двух персонажей.");const opts=f.sims.map(s=>`<option value="${s.id}">${esc(s.firstName)}</option>`).join("");showModal("Новая родственная связь",`<form class="modal-form" id="relation-form"><label>Первый персонаж<select name="from">${opts}</select></label><label>Кем приходится второму?<select name="type">${Object.entries(RELATIONS).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select></label><label>Второй персонаж<select name="to">${opts}</select></label><p class="hint">Обратная связь будет определена автоматически с учётом указанного пола.</p><div class="modal-actions"><button class="primary-button">Добавить связь</button><button class="cancel-button" type="button" data-close-modal>Отмена</button></div></form>`);
@@ -136,8 +136,7 @@ function openRelationForm(){const f=family();if(!f||f.sims.length<2)return notif
 }
 $("wheel-family").addEventListener("change",renderWheelControls);
 $("wheel-target").addEventListener("change",()=>{$("specific-sim-box").classList.toggle("hidden",$("wheel-target").value!=="specific")});
-$("wheel-set").addEventListener("change",()=>{currentSetId=$("wheel-set").value;state.activeSetId=currentSetId;state.activeWheelSets[wheelMode()]=currentSetId;save();renderWheelCategories()});
-document.querySelectorAll("[data-wheel-mode]").forEach(b=>b.addEventListener("click",()=>setWheelMode(b.dataset.wheelMode)));
+$("wheel-set").addEventListener("change",()=>{currentSetId=$("wheel-set").value;state.activeSetId=currentSetId;save();renderWheelCategories()});
 $("wheel-category").addEventListener("change",()=>{});
 $("spin-button").addEventListener("click",spinWheel);
 function spinWheel(){
@@ -145,15 +144,14 @@ function spinWheel(){
  const set=state.sets.find(x=>x.id===$("wheel-set").value)||activeSet();if(!set?.events.length)return notify("В этом наборе пока нет событий.");
  const category=$("wheel-category").value;let candidates=set.events.filter(e=>category==="all"||(e.category||"Без категории")===category);if(!candidates.length)return notify("В выбранной категории нет событий.");
  const mode=$("wheel-target").value;let target="Вся семья: "+f.name;if(mode==="specific"){const sim=f.sims.find(s=>s.id===$("wheel-sim").value);target=sim?`${sim.firstName} ${f.surname}`:f.name}else if(mode==="random"){const sim=f.sims[Math.floor(Math.random()*f.sims.length)];target=`${sim.firstName} ${f.surname}`}
- const event=candidates[Math.floor(Math.random()*candidates.length)];spinning=true;$("spin-button").disabled=true;$("wheel-result").innerHTML='<span class="result-label">'+(wheelMode()==="fate"?"СУДЬБА ВЫБИРАЕТ":"МАЛЕНЬКОЕ СОБЫТИЕ")+'</span><p>Колесо вращается…</p>';
+ const event=candidates[Math.floor(Math.random()*candidates.length)];spinning=true;$("spin-button").disabled=true;$("wheel-result").innerHTML='<span class="result-label">ТВОЁ СОБЫТИЕ</span><p>Судьба выбирает…</p>';
  rotation+=1440+Math.floor(Math.random()*720);$("wheel-disc").style.transform=`rotate(${rotation}deg)`;
- setTimeout(()=>{const title=event.title||event.text||"Событие";const details=[event.description?`<p class="event-description">${esc(event.description)}</p>`:"",event.actions?`<div class="event-detail"><strong>Игровые действия</strong><p>${esc(event.actions)}</p></div>`:"",event.choice?`<div class="event-detail event-choice"><strong>Выбор игрока</strong><p>${esc(event.choice)}</p></div>`:""].join("");
- $("wheel-result").innerHTML=`<span class="result-label">${wheelMode()==="fate"?"ТВОЯ СУДЬБА":"СЕГОДНЯШНИЙ МОМЕНТ"}</span><h3 class="result-title">${esc(title)}</h3>${details}<div class="result-meta">${esc(target)} · ${esc(event.category||"Без категории")}</div>`;
- state.history.unshift({event:title,target,setName:set.name,date:new Date().toLocaleString("ru-RU"),wheelMode:wheelMode()});save();renderHistory();spinning=false;$("spin-button").disabled=false;},4000);
+ setTimeout(()=>{ $("wheel-result").innerHTML=`<span class="result-label">ТВОЁ СОБЫТИЕ</span><p>${esc(event.text)}</p><div class="result-meta">${esc(target)} · ${esc(event.category||"Без категории")}</div>`;
+ state.history.unshift({event:event.text,target,setName:set.name,date:new Date().toLocaleString("ru-RU")});save();renderHistory();spinning=false;$("spin-button").disabled=false;},4000);
 }
 $("clear-history").addEventListener("click",()=>{if(!state.history.length)return;if(confirm("Очистить весь дневник судьбы?")){state.history=[];save();renderHistory()}});
-$("set-list").addEventListener("click",e=>{const b=e.target.closest("[data-set]");if(b){currentSetId=b.dataset.set;state.activeSetId=currentSetId;const picked=activeSet();if(picked?.wheelMode){state.wheelMode=picked.wheelMode;document.documentElement.dataset.wheelMode=state.wheelMode;document.querySelectorAll("[data-wheel-mode]").forEach(x=>x.classList.toggle("active",x.dataset.wheelMode===state.wheelMode));}state.activeWheelSets[state.wheelMode]=currentSetId;save();renderSets();renderWheelControls()}});
-$("add-set").addEventListener("click",()=>{showModal("Создать набор событий",`<form class="modal-form" id="new-set-form"><label>Название набора<input name="name" required maxlength="60" placeholder="Например, Семейные драмы"></label><label>Описание<textarea name="description" placeholder="Для какого игрового сюжета этот набор?"></textarea></label><div class="modal-actions"><button class="primary-button">Создать</button><button class="cancel-button" type="button" data-close-modal>Отмена</button></div></form>`);$("new-set-form").onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target),s={id:uid(),name:fd.get("name").trim(),description:fd.get("description").trim(),wheelMode:wheelMode(),events:[]};state.sets.push(s);currentSetId=s.id;state.activeSetId=s.id;save();closeModal();renderSets();renderWheelControls();notify("Набор создан")}})
+$("set-list").addEventListener("click",e=>{const b=e.target.closest("[data-set]");if(b){currentSetId=b.dataset.set;state.activeSetId=currentSetId;save();renderSets();renderWheelControls()}});
+$("add-set").addEventListener("click",()=>{showModal("Создать набор событий",`<form class="modal-form" id="new-set-form"><label>Название набора<input name="name" required maxlength="60" placeholder="Например, Семейные драмы"></label><label>Описание<textarea name="description" placeholder="Для какого игрового сюжета этот набор?"></textarea></label><div class="modal-actions"><button class="primary-button">Создать</button><button class="cancel-button" type="button" data-close-modal>Отмена</button></div></form>`);$("new-set-form").onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target),s={id:uid(),name:fd.get("name").trim(),description:fd.get("description").trim(),events:[]};state.sets.push(s);currentSetId=s.id;state.activeSetId=s.id;save();closeModal();renderSets();renderWheelControls();notify("Набор создан")}})
 $("rename-set").addEventListener("click",()=>{const s=activeSet();if(!s)return;showModal("Настройки набора",`<form class="modal-form" id="rename-form"><label>Название<input name="name" required value="${esc(s.name)}"></label><label>Описание<textarea name="description">${esc(s.description||"")}</textarea></label><div class="modal-actions"><button class="primary-button">Сохранить</button><button class="cancel-button" type="button" data-close-modal>Отмена</button></div></form>`);$("rename-form").onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);s.name=fd.get("name").trim();s.description=fd.get("description").trim();save();closeModal();renderSets();renderWheelControls()}})
 $("delete-set").addEventListener("click",()=>{const s=activeSet();if(!s)return;if(state.sets.length===1)return notify("Нельзя удалить последний набор.");if(!confirm(`Удалить набор «${s.name}»?`))return;state.sets=state.sets.filter(x=>x.id!==s.id);currentSetId=state.sets[0].id;state.activeSetId=currentSetId;save();renderSets();renderWheelControls()});
 $("category-filter").addEventListener("change",renderSets);
@@ -163,8 +161,7 @@ function openEventForm(existing=null){const set=activeSet();if(!set)return;const
 $("export-set").addEventListener("click",()=>{const s=activeSet();if(!s)return;downloadFile(`${s.name.replace(/[^\p{L}\p{N}-]+/gu,"_")}.json`,JSON.stringify({format:"sonechkins-stories-set",version:1,set:s},null,2),"application/json");notify("Набор экспортирован")});
 function downloadFile(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
 $("import-set").addEventListener("click",()=>$("import-file").click());
-$("import-file").addEventListener("change",async e=>{const file=e.target.files[0];if(!file)return;try{const text=await file.text();let imported;if(file.name.toLowerCase().endsWith(".csv")){const lines=text.replace(/^\uFEFF/,"").split(/\r?\n/).filter(Boolean),head=parseCSVLine(lines.shift());const idxText=head.findIndex(x=>/событие|event/i.test(x)),idxCat=head.findIndex(x=>/категория|category|пак/i.test(x));if(idxText<0)throw new Error("В CSV не найдена колонка «Событие».");imported={name:file.name.replace(/\.csv$/i,""),description:"Импортировано из CSV",events:lines.map((line,i)=>{const cols=parseCSVLine(line);return{id:uid(),text:cols[idxText]||"",category:cols[idxCat]||"Импортированные события",section:"Импорт"}}).filter(x=>x.text.trim())}}else{const parsed=JSON.parse(text);const s=parsed.set||parsed;if(!s||!Array.isArray(s.events))throw new Error("В JSON не найден список событий.");imported={name:s.name||file.name.replace(/\.json$/i,""),description:s.description||"Импортированный набор",events:s.events.map(e=>({id:uid(),text:String(e.text||e.event||"").trim(),category:e.category||"Импортированные события",section:e.section||"Импорт"})).filter(e=>e.text)}}if(!imported.events.length)throw new Error("В файле нет событий.");const s={id:uid(),wheelMode:wheelMode(),...imported};state.sets.push(s);currentSetId=s.id;state.activeSetId=s.id;save();renderSets();renderWheelControls();notify(`Импортировано событий: ${s.events.length}`)}catch(err){alert("Не удалось импортировать файл: "+err.message)}finally{e.target.value=""}});
+$("import-file").addEventListener("change",async e=>{const file=e.target.files[0];if(!file)return;try{const text=await file.text();let imported;if(file.name.toLowerCase().endsWith(".csv")){const lines=text.replace(/^\uFEFF/,"").split(/\r?\n/).filter(Boolean),head=parseCSVLine(lines.shift());const idxText=head.findIndex(x=>/событие|event/i.test(x)),idxCat=head.findIndex(x=>/категория|category|пак/i.test(x));if(idxText<0)throw new Error("В CSV не найдена колонка «Событие».");imported={name:file.name.replace(/\.csv$/i,""),description:"Импортировано из CSV",events:lines.map((line,i)=>{const cols=parseCSVLine(line);return{id:uid(),text:cols[idxText]||"",category:cols[idxCat]||"Импортированные события",section:"Импорт"}}).filter(x=>x.text.trim())}}else{const parsed=JSON.parse(text);const s=parsed.set||parsed;if(!s||!Array.isArray(s.events))throw new Error("В JSON не найден список событий.");imported={name:s.name||file.name.replace(/\.json$/i,""),description:s.description||"Импортированный набор",events:s.events.map(e=>({id:uid(),text:String(e.text||e.event||"").trim(),category:e.category||"Импортированные события",section:e.section||"Импорт"})).filter(e=>e.text)}}if(!imported.events.length)throw new Error("В файле нет событий.");const s={id:uid(),...imported};state.sets.push(s);currentSetId=s.id;state.activeSetId=s.id;save();renderSets();renderWheelControls();notify(`Импортировано событий: ${s.events.length}`)}catch(err){alert("Не удалось импортировать файл: "+err.message)}finally{e.target.value=""}});
 function parseCSVLine(line){const out=[];let cur="",quoted=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&line[i+1]==='"'&&quoted){cur+='"';i++}else if(c==='"')quoted=!quoted;else if(c===","&&!quoted){out.push(cur);cur=""}else cur+=c}out.push(cur);return out}
-$("restore-sets").addEventListener("click",()=>{if(!confirm("Вернуть исходный стандартный набор из подготовленного файла? Остальные наборы останутся на месте."))return;let standard=state.sets.find(s=>s.id==="standard");if(standard){standard.name="Стандартный набор";standard.description=`${STANDARD_EVENTS.length} событий из подготовленной коллекции`;standard.events=STANDARD_EVENTS.map(e=>({...e}))}else{standard={id:"standard",name:"Стандартный набор",description:`${STANDARD_EVENTS.length} событий из подготовленной коллекции`,events:STANDARD_EVENTS.map(e=>({...e}))};state.sets.unshift(standard)}currentSetId="standard";state.activeSetId=currentSetId;save();renderSets();renderWheelControls();notify("Стандартный набор восстановлен")});
 document.querySelectorAll(".main-nav a").forEach(a=>a.addEventListener("click",()=>{document.querySelectorAll(".main-nav a").forEach(x=>x.classList.remove("active"));a.classList.add("active")}));
-document.documentElement.dataset.wheelMode=wheelMode();document.querySelectorAll("[data-wheel-mode]").forEach(b=>b.classList.toggle("active",b.dataset.wheelMode===wheelMode()));setWheelMode(wheelMode());renderAll();
+renderAll();
