@@ -54,9 +54,10 @@
 
   <section class="content-section page-section" id="wheel">
     <div class="section-heading">
-      <span class="eyebrow">✦ WHEEL OF FATE ✦</span>
-      <h2>Колесо судьбы</h2>
-      <p>Выбери, чья история изменится сегодня.</p>
+      <span class="eyebrow" id="wheel-eyebrow">✦ WHEEL OF FATE ✦</span>
+      <h2 id="wheel-heading">Колесо судьбы</h2>
+      <p id="wheel-subheading">Большие повороты, сюжетные события и приключения, которые меняют жизнь симов.</p>
+      <div class="wheel-mode-switch" role="group" aria-label="Выбор колеса"><button class="wheel-mode-button active" type="button" data-wheel-mode="fate">✦ Колесо судьбы</button><button class="wheel-mode-button" type="button" data-wheel-mode="routine">☼ Колесо повседневности</button></div>
     </div>
     <div class="wheel-layout">
       <div class="panel wheel-settings">
@@ -97,11 +98,11 @@
           </div>
           <div class="wheel-disc-center">✦</div>
         </div></div>
-        <div class="wheel-caption">THE FATE IS IN YOUR HANDS</div>
+        <div class="wheel-caption" id="wheel-caption">THE FATE IS IN YOUR HANDS</div>
         <button class="primary-button spin-button" id="spin-button" type="button">Крутить колесо <span>✧</span></button>
         <div class="result-card" id="wheel-result" aria-live="polite">
           <span class="result-label">ТВОЁ СОБЫТИЕ</span>
-          <p>Здесь появится решение судьбы…</p>
+          <p>Здесь появится событие…</p>
         </div>
       </div>
     </div>
@@ -193,6 +194,7 @@
   <div class="modal-card"><button class="modal-x" type="button" data-close-modal aria-label="Закрыть">×</button><span class="panel-kicker">A LITTLE EDITING MAGIC</span><h3 id="modal-title"></h3><div id="modal-content"></div></div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="events.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
