@@ -46,3 +46,16 @@ a,button,select,input,textarea,[role=button]{cursor:var(--cursor)}button,input,s
 @media(max-width:900px){.site-header{padding:13px 4%;flex-wrap:wrap}.main-nav{order:3;width:100%;justify-content:center;flex-wrap:wrap}.hero{margin:22px 4% 35px}.content-section{padding-left:4%;padding-right:4%}.family-workspace,.sets-layout{grid-template-columns:230px minmax(0,1fr)}.wheel-layout{grid-template-columns:230px minmax(0,1fr)}}
 @media(max-width:650px){.site-header{justify-content:center}.brand{font-size:18px}.theme-toggle{position:absolute;right:12px;top:13px;padding:7px 9px}.theme-toggle #theme-label{display:none}.main-nav{gap:13px}.main-nav a{font-size:11px}.hero{grid-template-columns:1fr;margin:15px 4% 30px;padding:35px 25px;min-height:0}.hero-art{height:230px;margin-top:15px}.storybook{height:165px;width:125px}.book-title{font-size:20px}.orbit-one{width:230px;height:180px}.orbit-two{width:180px;height:240px}.intro-strip{margin:0 7% 55px;grid-template-columns:1fr;gap:15px}.content-section{padding:15px 4% 60px}.wheel-layout,.family-workspace,.sets-layout{grid-template-columns:1fr}.wheel-settings{order:2}.wheel-stage{order:1}.family-sidebar,.sets-sidebar{order:2}.family-main,.set-editor{order:1}.sim-grid{grid-template-columns:1fr}.family-heading,.set-title-row{align-items:flex-start;flex-direction:column}.diary-panel{padding:18px}.diary-head{align-items:flex-start}.history-entry{grid-template-columns:30px 1fr}.history-entry>small{grid-column:2}.set-toolbar{align-items:stretch}.set-toolbar select{max-width:none;flex:1}.compact-button{margin-left:0}.event-row{grid-template-columns:1fr}.event-actions{justify-content:flex-end}.site-footer{flex-direction:column;text-align:center}.about-card{padding:40px 22px}.about-card h2{font-size:32px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Дополнения — отдельная область, не смешанная с пользовательскими наборами */
+.addons-panel{max-width:1100px;margin:22px auto 0;padding:24px 27px}
+.addons-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.addons-heading h3{font-family:'Playfair Display',serif;font-size:23px;margin:0 0 4px}
+.addons-heading p{margin:0}
+.addons-list{display:grid;gap:10px;padding-top:14px}
+.addon-card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px;border:1px solid var(--line);border-radius:13px;background:var(--bg)}
+.addon-card strong{display:block;font-size:12px}
+.addon-card small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.addon-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.addon-toggle{border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--pink-deep);padding:8px 11px;font-size:10px;font-weight:800}
+@media(max-width:650px){.addons-panel{padding:20px}.addons-heading{align-items:stretch;flex-direction:column}.addons-heading .secondary-button{width:100%}.addon-card{align-items:flex-start;flex-direction:column}.addon-actions{width:100%}}
